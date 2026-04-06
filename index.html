@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <!-- LOGIN PAGE -->
+  <!-- ── LOGIN PAGE ─────────────────────────────────────────── -->
   <div id="login-page" class="login-page">
     <div class="login-card">
       <div class="login-brand">
@@ -24,7 +24,7 @@
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="••••••••" />
+        <input type="password" id="password" placeholder="•••••••••••" />
         <span class="field-error" id="password-error"></span>
       </div>
       <button class="btn-primary btn-full" id="login-btn">Sign In</button>
@@ -32,7 +32,7 @@
     </div>
   </div>
 
-  <!-- MAIN APP -->
+  <!-- ── MAIN APP ────────────────────────────────────────────── -->
   <div id="app" class="app hidden">
 
     <!-- SIDEBAR -->
@@ -60,7 +60,7 @@
       </div>
     </aside>
 
-    <!-- MAIN -->
+    <!-- MAIN CONTENT -->
     <main class="main-content">
 
       <header class="topbar">
@@ -68,7 +68,7 @@
         <div class="topbar-user">👤 <span id="topbar-email"></span></div>
       </header>
 
-      <!-- DASHBOARD -->
+      <!-- ── DASHBOARD ──────────────────────────────────────── -->
       <section id="section-dashboard" class="section active">
         <h2 class="section-heading">Overview</h2>
         <div class="cards-row">
@@ -99,12 +99,15 @@
         </div>
       </section>
 
-      <!-- TRANSACTIONS -->
+      <!-- ── TRANSACTIONS ───────────────────────────────────── -->
       <section id="section-transactions" class="section">
         <h2 class="section-heading">Transactions</h2>
+
         <div class="form-card">
           <h3 class="form-card-title" id="form-title">Add Transaction</h3>
           <input type="hidden" id="edit-id" />
+
+          <!-- Row 1: Title, Amount, Type -->
           <div class="form-row">
             <div class="form-group">
               <label>Title</label>
@@ -124,12 +127,51 @@
               </select>
             </div>
           </div>
+
+          <!-- Row 2: Note field -->
+          <div class="form-group">
+            <label>Note (optional)</label>
+            <input type="text" id="tx-note" placeholder="Add a note or description..." />
+          </div>
+
+          <!-- Row 3: Product Link (optional) -->
+          <div class="product-link-panel">
+            <div class="product-link-header" id="product-link-toggle">
+              <span class="product-link-icon"></span>
+              <span>Link to Inventory Product <small>(optional)</small></span>
+              <span class="product-link-arrow" id="product-link-arrow">▼</span>
+            </div>
+            <div class="product-link-body hidden" id="product-link-body">
+              <div class="form-row prod-link-row">
+                <div class="form-group">
+                  <label>Select Product</label>
+                  <select id="tx-product">
+                    <option value="">— None —</option>
+                    <!-- Options injected by JS -->
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input type="number" id="tx-prod-qty" placeholder="1" min="1" step="1" />
+                  <span class="field-error" id="tx-prod-qty-error"></span>
+                </div>
+                <div class="prod-link-info" id="prod-link-info">
+                  <!-- Product info shown after selecting -->
+                </div>
+              </div>
+              <p class="product-link-hint">
+                
+              </p>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button class="btn-primary" id="save-btn">Add Transaction</button>
             <button class="btn-secondary hidden" id="cancel-edit-btn">Cancel</button>
           </div>
         </div>
 
+        <!-- Search & Filter -->
         <div class="filter-bar">
           <input type="text" id="search-input" placeholder="🔍 Search..." class="search-input" />
           <div class="filter-btns">
@@ -139,10 +181,18 @@
           </div>
         </div>
 
+        <!-- Transactions Table -->
         <div class="table-card">
           <table class="tx-table">
             <thead>
-              <tr><th>Title</th><th>Amount</th><th>Type</th><th>Date</th><th>Actions</th></tr>
+              <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Note</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody id="tx-tbody"></tbody>
           </table>
@@ -150,21 +200,24 @@
         </div>
       </section>
 
-      <!-- INVENTORY -->
+      <!-- ── INVENTORY ──────────────────────────────────────── -->
       <section id="section-inventory" class="section">
         <h2 class="section-heading">Inventory</h2>
 
+        <!-- Low stock banner -->
         <div id="low-stock-banner" class="low-stock-banner hidden">
           ⚠️ <strong>Low Stock:</strong> <span id="low-stock-names"></span>
         </div>
 
+        <!-- Add / Edit Product Form -->
         <div class="form-card">
           <h3 class="form-card-title" id="inv-form-title">Add Product</h3>
           <input type="hidden" id="inv-edit-id" />
+
           <div class="form-row inv-form-row">
             <div class="form-group">
               <label>Product Name</label>
-              <input type="text" id="inv-name" placeholder="e.g. Water Bottle 5L" />
+              <input type="text" id="inv-name" placeholder="e.g. Coca Cola" />
               <span class="field-error" id="inv-name-error"></span>
             </div>
             <div class="form-group">
@@ -182,16 +235,33 @@
               <span class="field-error" id="inv-price-error"></span>
             </div>
           </div>
+
+          <!-- Image upload row -->
+          <div class="form-group img-upload-group">
+            <label>Product Image (optional)</label>
+            <div class="img-upload-area" id="img-upload-area">
+              <img id="img-preview" class="img-preview hidden" src="" alt="preview" />
+              <div id="img-placeholder" class="img-placeholder">
+                <span>🖼️</span>
+                <span>Click to upload or drag & drop</span>
+                <small>JPG, PNG, WEBP — max 2MB</small>
+              </div>
+              <input type="file" id="inv-image" accept="image/*" class="img-file-input" />
+            </div>
+            <button type="button" class="btn-remove-img hidden" id="remove-img-btn">✕ Remove image</button>
+          </div>
+
           <div class="form-actions">
             <button class="btn-primary" id="inv-save-btn">Add Product</button>
             <button class="btn-secondary hidden" id="inv-cancel-btn">Cancel</button>
           </div>
         </div>
 
+        <!-- Product Cards Grid -->
         <div id="inv-grid" class="inv-grid"></div>
         <div id="inv-empty" class="empty-state hidden">No products yet.</div>
 
-        <!-- SELL MODAL -->
+        <!-- Sell Modal -->
         <div id="sell-modal" class="modal-overlay hidden">
           <div class="modal-box">
             <h3 class="modal-title">Sell Product</h3>
@@ -210,7 +280,7 @@
         </div>
       </section>
 
-      <!-- SETTINGS -->
+      <!-- ── SETTINGS ───────────────────────────────────────── -->
       <section id="section-settings" class="section">
         <h2 class="section-heading">Settings</h2>
         <div class="placeholder-card">
