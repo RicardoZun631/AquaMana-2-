@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var LOW_STOCK     = 5;
   var currentUser   = null;
   var expWarnEmailSentToday = false;
-  var ITEMS_PER_PAGE     = 50;
+  var ITEMS_PER_PAGE     = 20;
   var txCurrentPage      = 1;
   var monthlyCurrentPage = 1;
   var monthlySearchQuery = '';
