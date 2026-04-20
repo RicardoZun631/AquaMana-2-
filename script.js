@@ -1386,189 +1386,210 @@ document.addEventListener("DOMContentLoaded", function () {
     if(e.target === sellModal) sellModal.classList.add('hidden');
   });
 
-  /* ══════════════════════════════════════════════════════════
-     SETTINGS
-  ══════════════════════════════════════════════════════════ */
-  function applySettings() {
-    if (setCurrency) setCurrency.value = settings.currency;
-    if (setName) setName.value = settings.name;
-    if (setEmail) setEmail.value = settings.email;
-    if (setBusiness) setBusiness.value = settings.business;
-    if (toggleLowStock) toggleLowStock.checked = settings.lowStockAlert;
-    if (toggleExpWarn) toggleExpWarn.checked = settings.expenseWarn;
-    if (toggleDailyEmail) toggleDailyEmail.checked = settings.dailyEmail;
-    if (setThreshold) setThreshold.value = settings.lowStockThreshold || 5;
+ /* ══════════════════════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════════════════════ */
+function applySettings() {
+  if (setCurrency) setCurrency.value = settings.currency;
+  if (setName) setName.value = settings.name;
+  if (setEmail) setEmail.value = settings.email;
+  if (setBusiness) setBusiness.value = settings.business;
+  if (toggleLowStock) toggleLowStock.checked = settings.lowStockAlert;
+  if (toggleExpWarn) toggleExpWarn.checked = settings.expenseWarn;
+  if (toggleDailyEmail) toggleDailyEmail.checked = settings.dailyEmail;
+  if (setThreshold) setThreshold.value = settings.lowStockThreshold || 5;
 
-    LOW_STOCK = settings.lowStockThreshold || 5;
+  LOW_STOCK = settings.lowStockThreshold || 5;
 
-    currencyLabels.forEach(function(el) {
-      el.textContent = settings.currency;
-    });
-  }
-
-  function updateTopbar() {
-    if (!currentUser) return;
-
-    var displayName = settings.name || currentUser.email.split('@')[0];
-
-    if (topbarName) topbarName.textContent = displayName;
-    if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
-    if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
-  }
-
-  saveProfileBtn.addEventListener('click',function(){
-    if(!currentUser) return;
-
-    settings.name = setName.value.trim();
-    settings.business = setBusiness.value.trim();
-
-    db.collection('users').doc(currentUser.uid).update({
-      name: settings.name,
-      business: settings.business
-    })
-    .then(function(){
-      if (profileSaved) {
-        profileSaved.classList.remove('hidden');
-        setTimeout(function(){ profileSaved.classList.add('hidden'); }, 2500);
-      }
-      updateTopbar();
-      toast('Profile Saved', 'Your profile has been updated.', 'success');
-    })
-    .catch(function(err){
-      toast('Save Failed', err.message, 'error');
-    });
+  currencyLabels.forEach(function(el) {
+    el.textContent = settings.currency;
   });
+}
 
-  saveCurrencyBtn.addEventListener('click',function(){
-    settings.currency = setCurrency.value;
-    currencyLabels.forEach(function(el){ el.textContent = settings.currency; });
-    refreshAll();
+function updateTopbar() {
+  if (!currentUser) return;
 
-    if (currencySaved) {
-      currencySaved.classList.remove('hidden');
-      setTimeout(function(){ currencySaved.classList.add('hidden'); }, 2500);
+  var displayName = settings.name || currentUser.email.split('@')[0];
+
+  if (topbarName) topbarName.textContent = displayName;
+  if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
+  if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
+}
+
+saveProfileBtn.addEventListener('click', function() {
+  if (!currentUser) return;
+
+  settings.name = setName.value.trim();
+  settings.business = setBusiness.value.trim();
+
+  db.collection('users').doc(currentUser.uid).update({
+    name: settings.name,
+    business: settings.business
+  })
+  .then(function() {
+    if (profileSaved) {
+      profileSaved.classList.remove('hidden');
+      setTimeout(function() {
+        profileSaved.classList.add('hidden');
+      }, 2500);
     }
-
-    toast('Currency Updated', 'All amounts now show in ' + settings.currency, 'success');
-
-    if(currentUser) {
-      db.collection('users').doc(currentUser.uid).update({ currency: settings.currency });
-    }
-  });
-
-  toggleLowStock.addEventListener('change',function(){
-    settings.lowStockAlert = this.checked;
-    renderInventory();
-
-    toast(
-      this.checked ? 'Low Stock Alerts ON' : 'Low Stock Alerts OFF',
-      this.checked ? 'You will be notified when stock is low.' : 'Low stock alerts are now disabled.',
-      this.checked ? 'success' : 'info'
-    );
-
-    if(currentUser) {
-      db.collection('users').doc(currentUser.uid).update({ lowStockAlert: settings.lowStockAlert });
-    }
-  });
-
-  toggleExpWarn.addEventListener('change',function(){
-    settings.expenseWarn = this.checked;
-    updateDashboard();
-    toast(this.checked ? 'Expense Warning ON' : 'Expense Warning OFF', '', this.checked ? 'success' : 'info', 2000);
-
-    if(currentUser) {
-      db.collection('users').doc(currentUser.uid).update({ expenseWarn: settings.expenseWarn });
-    }
-  });
-
-  saveThresholdBtn.addEventListener('click', function() {
-    var val = parseInt(setThreshold.value);
-
-    if (isNaN(val) || val < 1) {
-      toast('Invalid Threshold', 'Please enter a number greater than 0.', 'error');
-      return;
-    }
-
-    settings.lowStockThreshold = val;
-    LOW_STOCK = val;
-    renderInventory();
-    toast('Threshold Updated', 'Low stock alerts will trigger at ' + val + ' or fewer units.', 'success');
-
-    if (currentUser) {
-      db.collection('users').doc(currentUser.uid).update({ lowStockThreshold: val });
-    }
-  });
-
-  toggleDailyEmail.addEventListener('change',function(){
-    settings.dailyEmail = this.checked;
-
-    toast(
-      this.checked ? 'Daily Emails ON' : 'Daily Emails OFF',
-      this.checked ? 'You will receive a daily summary email.' : 'Daily summary emails are disabled.',
-      this.checked ? 'success' : 'info'
-    );
-
-    if(currentUser) {
-      db.collection('users').doc(currentUser.uid).update({ dailyEmail: settings.dailyEmail });
-    }
-  });
-
-  resetDataBtn.addEventListener('click',function(){
-    showConfirm(
-      '⚠️ Reset All Data',
-      'This will permanently delete ALL transactions and inventory. This cannot be undone.',
-      '🗑️',
-      'Yes, Reset Everything',
-      function() {
-        transactions = [];
-        inventory = [];
-        localStorage.removeItem(txKey());
-        localStorage.removeItem(invKey());
-        refreshAll();
-        toast('All Data Reset', 'All transactions and inventory have been cleared.', 'warning', 4000);
-      }
-    );
-  });
-
-  function showSection(name){
-    document.querySelectorAll('.section').forEach(function(s){
-      s.classList.remove('active');
-    });
-
-    var t = document.getElementById('section-' + name);
-    if (t) t.classList.add('active');
-
-    navItems.forEach(function(n){
-      n.classList.toggle('active', n.dataset.section === name);
-    });
-
-    topbarTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-  }
-
-  navItems.forEach(function(item){
-    item.addEventListener('click', function(e){
-      e.preventDefault();
-      showSection(item.dataset.section);
-    });
-  });
-
-  function showApp(user) {
-    hideLoading();
-    if (loginPage) loginPage.classList.add('hidden');
-    if (app) app.classList.remove('hidden');
-    applySettings();
     updateTopbar();
-    refreshAll();
-    showSection('dashboard');
-    checkDailySummaryEmail();
+    toast('Profile Saved', 'Your profile has been updated.', 'success');
+  })
+  .catch(function(err) {
+    toast('Save Failed', err.message, 'error');
+  });
+});
+
+saveCurrencyBtn.addEventListener('click', function() {
+  settings.currency = setCurrency.value;
+  currencyLabels.forEach(function(el) {
+    el.textContent = settings.currency;
+  });
+  refreshAll();
+
+  if (currencySaved) {
+    currencySaved.classList.remove('hidden');
+    setTimeout(function() {
+      currencySaved.classList.add('hidden');
+    }, 2500);
   }
 
-  window.AM = {
-    editTx: editTx,
-    deleteTx: deleteTx,
-    editProd: editProd,
-    deleteProd: deleteProd,
-    openSell: openSell
-  };
+  toast('Currency Updated', 'All amounts now show in ' + settings.currency, 'success');
+
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).update({
+      currency: settings.currency
+    });
+  }
+});
+
+toggleLowStock.addEventListener('change', function() {
+  settings.lowStockAlert = this.checked;
+  renderInventory();
+
+  toast(
+    this.checked ? 'Low Stock Alerts ON' : 'Low Stock Alerts OFF',
+    this.checked ? 'You will be notified when stock is low.' : 'Low stock alerts are now disabled.',
+    this.checked ? 'success' : 'info'
+  );
+
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).update({
+      lowStockAlert: settings.lowStockAlert
+    });
+  }
+});
+
+toggleExpWarn.addEventListener('change', function() {
+  settings.expenseWarn = this.checked;
+  updateDashboard();
+
+  toast(
+    this.checked ? 'Expense Warning ON' : 'Expense Warning OFF',
+    '',
+    this.checked ? 'success' : 'info',
+    2000
+  );
+
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).update({
+      expenseWarn: settings.expenseWarn
+    });
+  }
+});
+
+saveThresholdBtn.addEventListener('click', function() {
+  var val = parseInt(setThreshold.value);
+
+  if (isNaN(val) || val < 1) {
+    toast('Invalid Threshold', 'Please enter a number greater than 0.', 'error');
+    return;
+  }
+
+  settings.lowStockThreshold = val;
+  LOW_STOCK = val;
+  renderInventory();
+  toast('Threshold Updated', 'Low stock alerts will trigger at ' + val + ' or fewer units.', 'success');
+
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).update({
+      lowStockThreshold: val
+    });
+  }
+});
+
+toggleDailyEmail.addEventListener('change', function() {
+  settings.dailyEmail = this.checked;
+
+  toast(
+    this.checked ? 'Daily Emails ON' : 'Daily Emails OFF',
+    this.checked ? 'You will receive a daily summary email.' : 'Daily summary emails are disabled.',
+    this.checked ? 'success' : 'info'
+  );
+
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).update({
+      dailyEmail: settings.dailyEmail
+    });
+  }
+});
+
+resetDataBtn.addEventListener('click', function() {
+  showConfirm(
+    '⚠️ Reset All Data',
+    'This will permanently delete ALL transactions and inventory. This cannot be undone.',
+    '🗑️',
+    'Yes, Reset Everything',
+    function() {
+      transactions = [];
+      inventory = [];
+      localStorage.removeItem(txKey());
+      localStorage.removeItem(invKey());
+      refreshAll();
+      toast('All Data Reset', 'All transactions and inventory have been cleared.', 'warning', 4000);
+    }
+  );
+});
+function showSection(name){
+  document.querySelectorAll('.section').forEach(function(s){
+    s.classList.remove('active');
+  });
+
+  var t = document.getElementById('section-' + name);
+  if (t) t.classList.add('active');
+
+  navItems.forEach(function(n){
+    n.classList.toggle('active', n.dataset.section === name);
+  });
+
+  topbarTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+navItems.forEach(function(item){
+  item.addEventListener('click', function(e){
+    e.preventDefault();
+    showSection(item.dataset.section);
+  });
+});
+
+function showApp(user) {
+  hideLoading();
+  if (loginPage) loginPage.classList.add('hidden');
+  if (app) app.classList.remove('hidden');
+  applySettings();
+  updateTopbar();
+  refreshAll();
+  showSection('dashboard');
+  checkDailySummaryEmail();
+}
+
+window.AM = {
+  editTx: editTx,
+  deleteTx: deleteTx,
+  editProd: editProd,
+  deleteProd: deleteProd,
+  openSell: openSell
+};
 
 });
