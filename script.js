@@ -295,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var setThreshold      = document.getElementById('set-threshold');
   var saveThresholdBtn  = document.getElementById('save-threshold-btn');
   var resetDataBtn    = document.getElementById('reset-data-btn');
-  var firebaseUid     = document.getElementById('firebase-uid');
 
   var transactions  = [];
   var inventory     = [];
@@ -485,7 +484,6 @@ document.addEventListener('DOMContentLoaded', function () {
     hideLoading();
     loginPage.classList.add('hidden');
     app.classList.remove('hidden');
-    firebaseUid.textContent = 'UID: ' + user.uid;
     applySettings();
     updateTopbar();
     refreshAll();
