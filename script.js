@@ -919,11 +919,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  function populateProductDropdown() {
+function populateProductDropdown() {
   var cur = txProductSelect.value;
   txProductSelect.innerHTML = '<option value="">— None —</option>';
 
-  inventory.forEach(function (p) {
+  inventory.forEach(function(p) {
     var opt = document.createElement("option");
     opt.value = p.id;
     opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
@@ -934,10 +934,6 @@ document.addEventListener("DOMContentLoaded", function () {
   txProductSelect.value = cur;
   updateProdLinkInfo();
 }
-
-    txProductSelect.value = cur;
-    updateProdLinkInfo();
-  }
 
   function updateProdLinkInfo() {
     if (!txProductSelect || !prodLinkInfo) return;
