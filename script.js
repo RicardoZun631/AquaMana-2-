@@ -85,8 +85,8 @@ function toast(title, message, type, duration) {
   el.innerHTML =
     '<span class="toast-icon">' + icons[type] + "</span>" +
     '<div class="toast-body">' +
-    '<div class="toast-title">' + title + "</div>" +
-    (message ? '<div class="toast-msg">' + message + "</div>" : "") +
+      '<div class="toast-title">' + title + "</div>" +
+      (message ? '<div class="toast-msg">' + message + "</div>" : "") +
     "</div>" +
     '<button class="toast-close" onclick="this.parentElement._remove()">✕</button>';
 
@@ -125,7 +125,7 @@ function sendWelcomeEmail(name, email) {
     "Hi " + name + "! 👋\n\n" +
     "Welcome to AguaMana — your small business finance dashboard.\n\n" +
     "Your account has been created successfully.\n\n" +
-    "Here's what you can do:\n" +
+    "Here’s what you can do:\n" +
     "• Track your income and expenses\n" +
     "• Manage your product inventory\n" +
     "• View monthly financial summaries\n" +
@@ -243,9 +243,6 @@ document.addEventListener("DOMContentLoaded", function () {
   var monthlyPrevBtn = document.getElementById("monthly-prev-btn");
   var monthlyNextBtn = document.getElementById("monthly-next-btn");
   var monthlyPageInfo = document.getElementById("monthly-page-info");
-  var txPrevBtn = document.getElementById("tx-prev-btn");
-  var txNextBtn = document.getElementById("tx-next-btn");
-  var txPageInfo = document.getElementById("tx-page-info");
 
   var formTitle = document.getElementById("form-title");
   var editIdInput = document.getElementById("edit-id");
@@ -324,7 +321,6 @@ document.addEventListener("DOMContentLoaded", function () {
   var currentUser = null;
   var expWarnEmailSentToday = false;
   var ITEMS_PER_PAGE = 50;
-  var txCurrentPage = 1;
   var monthlyCurrentPage = 1;
   var monthlySearchQuery = "";
   var currentMonthTxs = [];
@@ -343,58 +339,32 @@ document.addEventListener("DOMContentLoaded", function () {
   function txKey() { return "am_tx_" + (currentUser ? currentUser.uid : "guest"); }
   function invKey() { return "am_inv_" + (currentUser ? currentUser.uid : "guest"); }
   function saveTx() { localStorage.setItem(txKey(), JSON.stringify(transactions)); }
-  function loadTx() {
-    var r = localStorage.getItem(txKey());
-    return r ? JSON.parse(r) : [];
-  }
+  function loadTx() { var r = localStorage.getItem(txKey()); return r ? JSON.parse(r) : []; }
   function saveInv() { localStorage.setItem(invKey(), JSON.stringify(inventory)); }
-  function loadInv() {
-    var r = localStorage.getItem(invKey());
-    return r ? JSON.parse(r) : [];
-  }
+  function loadInv() { var r = localStorage.getItem(invKey()); return r ? JSON.parse(r) : []; }
 
   function genId() { return "id_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6); }
-  function fmt(n) {
-    return settings.currency + Number(n).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-  function fmtDate(iso) {
-    return new Date(iso).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
-  }
+  function fmt(n) { return settings.currency + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function fmtDate(iso) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+
   function esc(str) {
     var d = document.createElement("div");
     d.appendChild(document.createTextNode(String(str || "")));
     return d.innerHTML;
   }
+
   function showLoading() { if (authLoading) authLoading.classList.remove("hidden"); }
   function hideLoading() { if (authLoading) authLoading.classList.add("hidden"); }
-    function clearAuthErrors() {
+
+  function clearAuthErrors() {
     [signinError, registerError].forEach(function (el) {
-      if (el) {
-        el.classList.add("hidden");
-        el.textContent = "";
-      }
+      if (el) { el.classList.add("hidden"); el.textContent = ""; }
     });
     [emailError, passwordError, regNameError, regEmailError, regPwError].forEach(function (el) {
       if (el) el.textContent = "";
     });
   }
-
-  function updateTopbar() {
-    if (!currentUser) return;
-    var displayName = settings.name || currentUser.email.split("@")[0];
-    if (topbarName) topbarName.textContent = displayName;
-    if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
-    if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
-  }
-
-  function applySettings() {
+    function applySettings() {
     if (setCurrency) setCurrency.value = settings.currency;
     if (setName) setName.value = settings.name;
     if (setEmail) setEmail.value = settings.email;
@@ -411,126 +381,104 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (tabSignin) {
-    tabSignin.addEventListener("click", function () {
-      tabSignin.classList.add("active");
-      if (tabRegister) tabRegister.classList.remove("active");
-      if (signinForm) signinForm.classList.remove("hidden");
-      if (registerForm) registerForm.classList.add("hidden");
-      clearAuthErrors();
-    });
+  function updateTopbar() {
+    if (!currentUser) return;
+    var displayName = settings.name || currentUser.email.split("@")[0];
+    if (topbarName) topbarName.textContent = displayName;
+    if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
+    if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
   }
 
-  if (tabRegister) {
-    tabRegister.addEventListener("click", function () {
-      tabRegister.classList.add("active");
-      if (tabSignin) tabSignin.classList.remove("active");
-      if (registerForm) registerForm.classList.remove("hidden");
-      if (signinForm) signinForm.classList.add("hidden");
-      clearAuthErrors();
+  tabSignin.addEventListener("click", function () {
+    tabSignin.classList.add("active");
+    tabRegister.classList.remove("active");
+    signinForm.classList.remove("hidden");
+    registerForm.classList.add("hidden");
+    clearAuthErrors();
+  });
+
+  tabRegister.addEventListener("click", function () {
+    tabRegister.classList.add("active");
+    tabSignin.classList.remove("active");
+    registerForm.classList.remove("hidden");
+    signinForm.classList.add("hidden");
+    clearAuthErrors();
+  });
+
+  loginBtn.addEventListener("click", function () {
+    clearAuthErrors();
+    var email = emailInput.value.trim();
+    var pass = passwordInput.value;
+    var valid = true;
+
+    if (!email) { emailError.textContent = "Email is required."; valid = false; }
+    if (!pass) { passwordError.textContent = "Password is required."; valid = false; }
+    if (!valid) return;
+
+    showLoading();
+    loginBtn.disabled = true;
+
+    auth.signInWithEmailAndPassword(email, pass).catch(function (err) {
+      hideLoading();
+      loginBtn.disabled = false;
+      var msg = "Sign in failed.";
+      if (err.code === "auth/user-not-found") msg = "No account found with this email.";
+      if (err.code === "auth/wrong-password") msg = "Incorrect password.";
+      if (err.code === "auth/invalid-credential") msg = "Invalid email or password.";
+      if (err.code === "auth/too-many-requests") msg = "Too many attempts. Please wait.";
+      signinError.textContent = msg;
+      signinError.classList.remove("hidden");
     });
-  }
+  });
 
-  if (loginBtn) {
-    loginBtn.addEventListener("click", function () {
-      clearAuthErrors();
-      var email = emailInput ? emailInput.value.trim() : "";
-      var pass = passwordInput ? passwordInput.value : "";
-      var valid = true;
+  passwordInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") loginBtn.click();
+  });
 
-      if (!email) {
-        if (emailError) emailError.textContent = "Email is required.";
-        valid = false;
-      }
-      if (!pass) {
-        if (passwordError) passwordError.textContent = "Password is required.";
-        valid = false;
-      }
-      if (!valid) return;
+  registerBtn.addEventListener("click", function () {
+    clearAuthErrors();
 
-      showLoading();
-      loginBtn.disabled = true;
+    var name = regName.value.trim();
+    var business = regBusiness.value.trim();
+    var email = regEmail.value.trim();
+    var pass = regPassword.value;
+    var valid = true;
 
-      auth.signInWithEmailAndPassword(email, pass)
-        .catch(function (err) {
-          hideLoading();
-          loginBtn.disabled = false;
-          var msg = "Sign in failed.";
-          if (err.code === "auth/user-not-found") msg = "No account found with this email.";
-          if (err.code === "auth/wrong-password") msg = "Incorrect password.";
-          if (err.code === "auth/invalid-credential") msg = "Invalid email or password.";
-          if (err.code === "auth/too-many-requests") msg = "Too many attempts. Please wait.";
-          if (signinError) {
-            signinError.textContent = msg;
-            signinError.classList.remove("hidden");
-          }
+    if (!name) { regNameError.textContent = "Name is required."; valid = false; }
+    if (!email) { regEmailError.textContent = "Email is required."; valid = false; }
+    if (!pass || pass.length < 6) { regPwError.textContent = "Password must be 6+ characters."; valid = false; }
+    if (!valid) return;
+
+    showLoading();
+    registerBtn.disabled = true;
+
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then(function (result) {
+        var user = result.user;
+        return db.collection("users").doc(user.uid).set({
+          name: name,
+          business: business,
+          email: email,
+          currency: "$",
+          lowStockAlert: true,
+          expenseWarn: true,
+          dailyEmail: true,
+          lowStockThreshold: 5,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function () {
+          return sendWelcomeEmail(name, email);
         });
-    });
-  }
-
-  if (passwordInput) {
-    passwordInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && loginBtn) loginBtn.click();
-    });
-  }
-
-  if (registerBtn) {
-    registerBtn.addEventListener("click", function () {
-      clearAuthErrors();
-
-      var name = regName ? regName.value.trim() : "";
-      var business = regBusiness ? regBusiness.value.trim() : "";
-      var email = regEmail ? regEmail.value.trim() : "";
-      var pass = regPassword ? regPassword.value : "";
-      var valid = true;
-
-      if (!name) {
-        if (regNameError) regNameError.textContent = "Name is required.";
-        valid = false;
-      }
-      if (!email) {
-        if (regEmailError) regEmailError.textContent = "Email is required.";
-        valid = false;
-      }
-      if (!pass || pass.length < 6) {
-        if (regPwError) regPwError.textContent = "Password must be 6+ characters.";
-        valid = false;
-      }
-      if (!valid) return;
-
-      showLoading();
-      registerBtn.disabled = true;
-
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(function (result) {
-          var user = result.user;
-          return db.collection("users").doc(user.uid).set({
-            name: name,
-            business: business,
-            email: email,
-            currency: "$",
-            lowStockAlert: true,
-            expenseWarn: true,
-            dailyEmail: true,
-            lowStockThreshold: 5,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          }).then(function () {
-            return sendWelcomeEmail(name, email);
-          });
-        })
-        .catch(function (err) {
-          hideLoading();
-          registerBtn.disabled = false;
-          var msg = "Registration failed.";
-          if (err.code === "auth/email-already-in-use") msg = "An account with this email already exists.";
-          if (err.code === "auth/weak-password") msg = "Password is too weak.";
-          if (registerError) {
-            registerError.textContent = msg;
-            registerError.classList.remove("hidden");
-          }
-        });
-    });
-  }
+      })
+      .catch(function (err) {
+        hideLoading();
+        registerBtn.disabled = false;
+        var msg = "Registration failed.";
+        if (err.code === "auth/email-already-in-use") msg = "An account with this email already exists.";
+        if (err.code === "auth/weak-password") msg = "Password is too weak.";
+        registerError.textContent = msg;
+        registerError.classList.remove("hidden");
+      });
+  });
 
   auth.onAuthStateChanged(function (user) {
     if (user) {
@@ -546,32 +494,31 @@ document.addEventListener("DOMContentLoaded", function () {
             settings.expenseWarn = d.expenseWarn !== undefined ? d.expenseWarn : true;
             settings.dailyEmail = d.dailyEmail !== undefined ? d.dailyEmail : true;
             settings.lowStockThreshold = d.lowStockThreshold !== undefined ? d.lowStockThreshold : 5;
-            LOW_STOCK = settings.lowStockThreshold;
           }
           settings.email = user.email;
           transactions = loadTx();
           inventory = loadInv();
-          showApp(user);
+          showApp();
         })
         .catch(function () {
           settings.email = user.email;
           transactions = loadTx();
           inventory = loadInv();
-          showApp(user);
+          showApp();
         });
     } else {
       currentUser = null;
       transactions = [];
       inventory = [];
       hideLoading();
-      if (loginBtn) loginBtn.disabled = false;
-      if (registerBtn) registerBtn.disabled = false;
-      if (loginPage) loginPage.classList.remove("hidden");
-      if (app) app.classList.add("hidden");
+      loginBtn.disabled = false;
+      registerBtn.disabled = false;
+      loginPage.classList.remove("hidden");
+      app.classList.add("hidden");
     }
   });
 
-  function showApp(user) {
+  function showApp() {
     hideLoading();
     if (loginPage) loginPage.classList.add("hidden");
     if (app) app.classList.remove("hidden");
@@ -582,24 +529,18 @@ document.addEventListener("DOMContentLoaded", function () {
     checkDailySummaryEmail();
   }
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function () {
-      auth.signOut().then(function () {
-        if (txProductSelect) txProductSelect.innerHTML = '<option value="">— None —</option>';
-        if (txProdQty) txProdQty.value = "";
-        if (prodLinkInfo) {
-          prodLinkInfo.classList.add("empty");
-          prodLinkInfo.innerHTML = "";
-        }
-        LOW_STOCK = 5;
-        expWarnEmailSentToday = false;
-        toast("Signed out", "See you next time!", "info");
-      });
+  logoutBtn.addEventListener("click", function () {
+    auth.signOut().then(function () {
+      txProductSelect.innerHTML = '<option value="">— None —</option>';
+      txProdQty.value = "";
+      prodLinkInfo.classList.add("empty");
+      prodLinkInfo.innerHTML = "";
+      LOW_STOCK = 5;
+      expWarnEmailSentToday = false;
+      toast("Signed out", "See you next time!", "info");
     });
-  }
-    /* ══════════════════════════════════════════════════════════
-     DAILY SUMMARY EMAIL
-  ══════════════════════════════════════════════════════════ */
+  });
+
   function checkDailySummaryEmail() {
     if (!settings.dailyEmail || !currentUser) return;
 
@@ -634,12 +575,12 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Daily summary failed:", err);
     });
   }
-
-  /* ══════════════════════════════════════════════════════════
+    /* ══════════════════════════════════════════════════════════
      DASHBOARD
   ══════════════════════════════════════════════════════════ */
   function updateDashboard() {
     var income = 0, expenses = 0;
+
     transactions.forEach(function (tx) {
       if (tx.type === "income") income += tx.amount;
       else expenses += tx.amount;
@@ -667,34 +608,31 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    if (recentList) {
-      recentList.innerHTML = "";
-      if (!transactions.length) {
-        recentList.innerHTML = '<p class="empty-state">No transactions yet.</p>';
-      } else {
-        transactions.slice().sort(function (a, b) {
-          return new Date(b.date) - new Date(a.date);
-        }).slice(0, 5).forEach(function (tx) {
-          var el = document.createElement("div");
-          el.className = "recent-item";
-          el.innerHTML =
-            "<div><div class=\"recent-title\">" + esc(tx.title) + "</div><div class=\"recent-date\">" + fmtDate(tx.date) + "</div></div>" +
-            "<div style=\"display:flex;align-items:center;gap:8px;\">" +
-            "<span class=\"" + (tx.type === "income" ? "amount-income" : "amount-expense") + "\">" + (tx.type === "income" ? "+" : "-") + fmt(tx.amount) + "</span>" +
-            "<span class=\"badge badge-" + tx.type + "\">" + tx.type + "</span></div>";
-          recentList.appendChild(el);
-        });
-      }
+    recentList.innerHTML = "";
+    if (!transactions.length) {
+      recentList.innerHTML = '<p class="empty-state">No transactions yet.</p>';
+    } else {
+      transactions.slice().sort(function (a, b) {
+        return new Date(b.date) - new Date(a.date);
+      }).slice(0, 5).forEach(function (tx) {
+        var el = document.createElement("div");
+        el.className = "recent-item";
+        el.innerHTML =
+          "<div><div class=\"recent-title\">" + esc(tx.title) + "</div><div class=\"recent-date\">" + fmtDate(tx.date) + "</div></div>" +
+          "<div style=\"display:flex;align-items:center;gap:8px;\">" +
+          "<span class=\"" + (tx.type === "income" ? "amount-income" : "amount-expense") + "\">" + (tx.type === "income" ? "+" : "-") + fmt(tx.amount) + "</span>" +
+          "<span class=\"badge badge-" + tx.type + "\">" + tx.type + "</span></div>";
+        recentList.appendChild(el);
+      });
     }
 
     buildMonthDropdown();
   }
 
   function buildMonthDropdown() {
-    if (!monthSelect) return;
-
     var current = monthSelect.value;
     var months = {};
+
     transactions.forEach(function (tx) {
       var d = new Date(tx.date);
       var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
@@ -702,14 +640,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     var sorted = Object.keys(months).sort(function (a, b) { return b.localeCompare(a); });
+
     monthSelect.innerHTML = '<option value="">— Select a month —</option>';
 
     sorted.forEach(function (key) {
       var p = key.split("-");
-      var label = new Date(parseInt(p[0]), parseInt(p[1]) - 1, 1).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric"
-      });
+      var label = new Date(parseInt(p[0]), parseInt(p[1]) - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
       var opt = document.createElement("option");
       opt.value = key;
       opt.textContent = label;
@@ -721,17 +657,17 @@ document.addEventListener("DOMContentLoaded", function () {
       renderMonthlySummary(current);
     } else {
       monthSelect.value = "";
-      if (monthlyCards) monthlyCards.classList.add("hidden");
-      if (monthlyTxSec) monthlyTxSec.classList.add("hidden");
-      if (monthlyHolder) monthlyHolder.classList.remove("hidden");
+      monthlyCards.classList.add("hidden");
+      monthlyTxSec.classList.add("hidden");
+      monthlyHolder.classList.remove("hidden");
     }
   }
 
   function renderMonthlySummary(key) {
     if (!key) {
-      if (monthlyCards) monthlyCards.classList.add("hidden");
-      if (monthlyTxSec) monthlyTxSec.classList.add("hidden");
-      if (monthlyHolder) monthlyHolder.classList.remove("hidden");
+      monthlyCards.classList.add("hidden");
+      monthlyTxSec.classList.add("hidden");
+      monthlyHolder.classList.remove("hidden");
       return;
     }
 
@@ -752,16 +688,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     var bal = inc - exp;
 
-    if (monthIncome) monthIncome.textContent = fmt(inc);
-    if (monthExpenses) monthExpenses.textContent = fmt(exp);
-    if (monthBalance) {
-      monthBalance.textContent = fmt(bal);
-      monthBalance.style.color = bal < 0 ? "var(--expense)" : "var(--accent)";
-    }
-    if (monthCount) monthCount.textContent = allMonthTxs.length;
-    if (monthlyCards) monthlyCards.classList.remove("hidden");
-    if (monthlyTxSec) monthlyTxSec.classList.remove("hidden");
-    if (monthlyHolder) monthlyHolder.classList.add("hidden");
+    monthIncome.textContent = fmt(inc);
+    monthExpenses.textContent = fmt(exp);
+    monthBalance.textContent = fmt(bal);
+    monthCount.textContent = allMonthTxs.length;
+    monthBalance.style.color = bal < 0 ? "var(--expense)" : "var(--accent)";
+
+    monthlyCards.classList.remove("hidden");
+    monthlyTxSec.classList.remove("hidden");
+    monthlyHolder.classList.add("hidden");
 
     var filtered = allMonthTxs.slice();
     if (monthlySearchQuery.trim()) {
@@ -778,13 +713,13 @@ document.addEventListener("DOMContentLoaded", function () {
     currentMonthTxs = filtered;
     renderMonthlyPage();
   }
-    function renderMonthlyPage() {
-    if (!monthlyTxList) return;
+
+  function renderMonthlyPage() {
     monthlyTxList.innerHTML = "";
 
     if (!currentMonthTxs.length) {
       monthlyTxList.innerHTML = '<p class="empty-state">No transactions match your search.</p>';
-      if (monthlyPagBar) monthlyPagBar.classList.add("hidden");
+      monthlyPagBar.classList.add("hidden");
       return;
     }
 
@@ -799,49 +734,43 @@ document.addEventListener("DOMContentLoaded", function () {
       var row = document.createElement("div");
       row.className = "monthly-tx-row";
       row.innerHTML =
-        '<div class="monthly-tx-left">' +
-          '<div class="monthly-tx-title">' + esc(tx.title) + "</div>" +
-          (tx.note ? '<div class="monthly-tx-note">' + esc(tx.note) + "</div>" : "") +
-          '<div class="monthly-tx-note">' + fmtDate(tx.date) + "</div>" +
+        "<div class=\"monthly-tx-left\">" +
+          "<div class=\"monthly-tx-title\">" + esc(tx.title) + "</div>" +
+          (tx.note ? "<div class=\"monthly-tx-note\">" + esc(tx.note) + "</div>" : "") +
+          "<div class=\"monthly-tx-note\">" + fmtDate(tx.date) + "</div>" +
         "</div>" +
-        '<div class="monthly-tx-right">' +
-          '<span class="' + (tx.type === "income" ? "amount-income" : "amount-expense") + '">' +
-            (tx.type === "income" ? "+" : "-") + fmt(tx.amount) +
-          "</span>" +
-          '<span class="badge badge-' + tx.type + '">' + tx.type + "</span>" +
+        "<div class=\"monthly-tx-right\">" +
+          "<span class=\"" + (tx.type === "income" ? "amount-income" : "amount-expense") + "\">" + (tx.type === "income" ? "+" : "-") + fmt(tx.amount) + "</span>" +
+          "<span class=\"badge badge-" + tx.type + "\">" + tx.type + "</span>" +
         "</div>";
       monthlyTxList.appendChild(row);
     });
 
     if (currentMonthTxs.length > ITEMS_PER_PAGE) {
-      if (monthlyPagBar) monthlyPagBar.classList.remove("hidden");
-      if (monthlyPageInfo) monthlyPageInfo.textContent = "Page " + monthlyCurrentPage + " of " + totalPages + " (" + currentMonthTxs.length + " shown)";
-      if (monthlyPrevBtn) monthlyPrevBtn.disabled = monthlyCurrentPage <= 1;
-      if (monthlyNextBtn) monthlyNextBtn.disabled = monthlyCurrentPage >= totalPages;
+      monthlyPagBar.classList.remove("hidden");
+      monthlyPageInfo.textContent = "Page " + monthlyCurrentPage + " of " + totalPages + " (" + currentMonthTxs.length + " shown)";
+      monthlyPrevBtn.disabled = monthlyCurrentPage <= 1;
+      monthlyNextBtn.disabled = monthlyCurrentPage >= totalPages;
     } else {
-      if (monthlyPagBar) monthlyPagBar.classList.add("hidden");
+      monthlyPagBar.classList.add("hidden");
     }
   }
 
-  if (monthlyPrevBtn) monthlyPrevBtn.addEventListener("click", function () { monthlyCurrentPage--; renderMonthlyPage(); });
-  if (monthlyNextBtn) monthlyNextBtn.addEventListener("click", function () { monthlyCurrentPage++; renderMonthlyPage(); });
+  monthlyPrevBtn.addEventListener("click", function () {
+    monthlyCurrentPage--;
+    renderMonthlyPage();
+  });
 
-  if (monthlySearch) {
-    monthlySearch.addEventListener("input", function () {
-      monthlySearchQuery = this.value;
-      monthlyCurrentPage = 1;
-      renderMonthlySummary(monthSelect ? monthSelect.value : "");
-    });
-  }
+  monthlyNextBtn.addEventListener("click", function () {
+    monthlyCurrentPage++;
+    renderMonthlyPage();
+  });
 
-  if (monthSelect) {
-    monthSelect.addEventListener("change", function () {
-      monthlySearchQuery = "";
-      if (monthlySearch) monthlySearch.value = "";
-      monthlyCurrentPage = 1;
-      renderMonthlySummary(this.value);
-    });
-  }
+  monthlySearch.addEventListener("input", function () {
+    monthlySearchQuery = this.value;
+        monthlyCurrentPage  = 1;
+    renderMonthlySummary(this.value);
+  });
 
   function refreshAll() {
     txCurrentPage = 1;
@@ -853,123 +782,459 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ══════════════════════════════════════════════════════════
      TRANSACTIONS
   ══════════════════════════════════════════════════════════ */
-  function renderTable() {
-    if (!txTbody) return;
-
+  function renderTable(){
     var list = transactions.slice();
 
-    if (activeFilter !== "all") {
-      list = list.filter(function (t) { return t.type === activeFilter; });
+    if (activeFilter !== 'all') {
+      list = list.filter(function(t){ return t.type === activeFilter; });
     }
+
     if (searchQuery.trim()) {
       var q = searchQuery.toLowerCase();
-      list = list.filter(function (t) {
+      list = list.filter(function(t){
         return t.title.toLowerCase().indexOf(q) !== -1;
       });
     }
 
-    list.sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
-    txTbody.innerHTML = "";
+    list.sort(function(a,b){
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    txTbody.innerHTML = '';
 
     if (!list.length) {
-      if (txEmpty) txEmpty.classList.remove("hidden");
+      txEmpty.classList.remove('hidden');
       return;
     }
-    if (txEmpty) txEmpty.classList.add("hidden");
 
-    list.forEach(function (tx) {
-      var tr = document.createElement("tr");
+    txEmpty.classList.add('hidden');
+
+    list.forEach(function(tx){
+      var tr = document.createElement('tr');
       tr.innerHTML =
-        "<td>" + esc(tx.title) + "</td>" +
-        '<td class="' + (tx.type === "income" ? "amount-income" : "amount-expense") + '">' +
-          (tx.type === "income" ? "+" : "-") + fmt(tx.amount) +
-        "</td>" +
-        '<td><span class="badge badge-' + tx.type + '">' + tx.type + "</span></td>" +
-        '<td class="tx-note-cell">' + esc(tx.note || "—") + "</td>" +
-        "<td>" + fmtDate(tx.date) + "</td>" +
+        '<td>' + esc(tx.title) + '</td>' +
+        '<td class="' + (tx.type === 'income' ? 'amount-income' : 'amount-expense') + '">' +
+          (tx.type === 'income' ? '+' : '-') + fmt(tx.amount) +
+        '</td>' +
+        '<td><span class="badge badge-' + tx.type + '">' + tx.type + '</span></td>' +
+        '<td class="tx-note-cell">' + esc(tx.note || '—') + '</td>' +
+        '<td>' + fmtDate(tx.date) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="btn-edit" onclick="AM.editTx(\'' + tx.id + '\')">Edit</button>' +
           '<button class="btn-delete" onclick="AM.deleteTx(\'' + tx.id + '\')">Delete</button>' +
-        "</div></td>";
+        '</div></td>';
+
       txTbody.appendChild(tr);
     });
   }
 
-  if (searchInput) {
-    searchInput.addEventListener("input", function () {
-      searchQuery = this.value;
-      renderTable();
+  productLinkToggle.addEventListener('click', function(){
+    var h = productLinkBody.classList.contains('hidden');
+    productLinkBody.classList.toggle('hidden', !h);
+    productLinkArrow.classList.toggle('open', h);
+  });
+
+  function populateProductDropdown() {
+    var cur = txProductSelect.value;
+    txProductSelect.innerHTML = '<option value="">— None —</option>';
+
+    inventory.forEach(function(p) {
+      var opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
+      if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
+      txProductSelect.appendChild(opt);
     });
+
+    txProductSelect.value = cur;
+    updateProdLinkInfo();
   }
 
-  filterBtns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      filterBtns.forEach(function (b) { b.classList.remove("active"); });
-      this.classList.add("active");
+  function updateProdLinkInfo(){
+    var pid = txProductSelect.value;
+    var qty = parseInt(txProdQty.value) || 0;
+
+    if (!pid) {
+      prodLinkInfo.classList.add('empty');
+      prodLinkInfo.innerHTML = '';
+      return;
+    }
+
+    var p = inventory.find(function(p){ return p.id === pid; });
+    if (!p) {
+      prodLinkInfo.classList.add('empty');
+      return;
+    }
+
+    prodLinkInfo.classList.remove('empty');
+
+    var warn = '';
+    if (p.qty === 0) {
+      warn = '<div class="prod-link-info-stock-warn">⚠ Out of stock!</div>';
+    } else if (p.qty <= LOW_STOCK) {
+      warn = '<div class="prod-link-info-stock-warn">⚠ Low stock: ' + p.qty + ' left</div>';
+    }
+
+    prodLinkInfo.innerHTML =
+      '<div class="prod-link-info-name">' + esc(p.name) + '</div>' +
+      '<div class="prod-link-info-row">Price: ' + fmt(p.price) + '/unit</div>' +
+      '<div class="prod-link-info-row">In stock: ' + p.qty + '</div>' +
+      (qty > 0 ? '<div class="prod-link-info-row">Total: <strong>' + fmt(qty * p.price) + '</strong></div>' : '') +
+      warn;
+
+    if (qty > 0) {
+      txAmount.value = (qty * p.price).toFixed(2);
+    }
+  }
+
+  txProductSelect.addEventListener('change', function(){
+    txProdQty.value = '';
+    updateProdLinkInfo();
+
+    if (txProductSelect.value && !txTitle.value.trim()) {
+      var p = inventory.find(function(p){ return p.id === txProductSelect.value; });
+      if (p) txTitle.value = 'Sale: ' + p.name;
+    }
+  });
+
+  txProdQty.addEventListener('input', updateProdLinkInfo);
+
+  saveBtn.addEventListener('click', function(){
+    txTitleError.textContent = '';
+    txAmtError.textContent = '';
+    txProdQtyError.textContent = '';
+
+    var valid = true;
+
+    if (!txTitle.value.trim()) {
+      txTitleError.textContent = 'Title required.';
+      valid = false;
+    }
+
+    var amt = parseFloat(txAmount.value);
+    if (!txAmount.value || isNaN(amt) || amt <= 0) {
+      txAmtError.textContent = 'Enter amount > 0.';
+      valid = false;
+    }
+
+    var lid = txProductSelect.value;
+    var lqty = parseInt(txProdQty.value);
+
+    if (lid) {
+      if (!txProdQty.value || isNaN(lqty) || lqty <= 0) {
+        txProdQtyError.textContent = 'Enter quantity > 0.';
+        valid = false;
+      } else {
+        var lp = inventory.find(function(p){ return p.id === lid; });
+        if (lp && lqty > lp.qty) {
+          txProdQtyError.textContent = 'Only ' + lp.qty + ' in stock.';
+          valid = false;
+        }
+      }
+    }
+
+    if (!valid) return;
+
+    var id = editIdInput.value;
+
+    if (id) {
+      var i = transactions.findIndex(function(t){ return t.id === id; });
+      if (i !== -1) {
+        transactions[i].title = txTitle.value.trim();
+        transactions[i].amount = amt;
+        transactions[i].type = txType.value;
+        transactions[i].note = txNote.value.trim();
+      }
+
+      exitTxEdit();
+      toast('Transaction Updated', txTitle.value.trim() + ' has been updated.', 'success');
+    } else {
+      var newTx = {
+        id: genId(),
+        title: txTitle.value.trim(),
+        amount: amt,
+        type: txType.value,
+        note: txNote.value.trim(),
+        date: new Date().toISOString(),
+        linkedProductId: lid || null,
+        linkedQty: lid ? lqty : null
+      };
+
+      transactions.push(newTx);
+
+      if (lid) {
+        var pi = inventory.findIndex(function(p){ return p.id === lid; });
+        if (pi !== -1) {
+          inventory[pi].qty -= lqty;
+          if (inventory[pi].qty < 0) inventory[pi].qty = 0;
+          saveInv();
+        }
+      }
+
+      txTitle.value = '';
+      txAmount.value = '';
+      txType.value = 'income';
+      txNote.value = '';
+      txProductSelect.value = '';
+      txProdQty.value = '';
+      prodLinkInfo.classList.add('empty');
+      prodLinkInfo.innerHTML = '';
+
+      var typeLabel = newTx.type === 'income' ? '💰 Income' : '💸 Expense';
+      toast(typeLabel + ' Added', newTx.title + ' — ' + fmt(newTx.amount), 'success');
+    }
+
+    saveTx();
+    refreshAll();
+  });
+
+  function editTx(id){
+    var tx = transactions.find(function(t){ return t.id === id; });
+    if (!tx) return;
+
+    editIdInput.value = tx.id;
+    txTitle.value = tx.title;
+    txAmount.value = tx.amount;
+    txType.value = tx.type;
+    txNote.value = tx.note || '';
+
+    formTitle.textContent = 'Edit Transaction';
+    saveBtn.textContent = 'Save Changes';
+    cancelBtn.textContent = 'Cancel Edit';
+
+    document.querySelector('#section-transactions .form-card').scrollIntoView({
+      behavior:'smooth',
+      block:'start'
+    });
+
+    toast('Edit Mode', 'Editing "' + tx.title + '"', 'info', 2000);
+  }
+
+  function exitTxEdit(){
+    editIdInput.value = '';
+    formTitle.textContent = 'Add Transaction';
+    saveBtn.textContent = 'Add Transaction';
+    cancelBtn.textContent = 'Clear';
+    txTitle.value = '';
+    txAmount.value = '';
+    txType.value = 'income';
+    txNote.value = '';
+    txTitleError.textContent = '';
+    txAmtError.textContent = '';
+  }
+
+  cancelBtn.addEventListener('click', function(){
+    if (editIdInput.value) {
+      exitTxEdit();
+    } else {
+      txTitle.value = '';
+      txAmount.value = '';
+      txType.value = 'income';
+      txNote.value = '';
+      txProductSelect.value = '';
+      txProdQty.value = '';
+      prodLinkInfo.classList.add('empty');
+      prodLinkInfo.innerHTML = '';
+      txTitleError.textContent = '';
+      txAmtError.textContent = '';
+      txProdQtyError.textContent = '';
+    }
+  });
+
+  function deleteTx(id){
+    var tx = transactions.find(function(t){ return t.id === id; });
+    var title = tx ? tx.title : 'Transaction';
+
+    showConfirm(
+      'Delete Transaction',
+      'Delete "' + title + '"? This cannot be undone.',
+      '🗑️',
+      'Yes, Delete',
+      function() {
+        transactions = transactions.filter(function(t){ return t.id !== id; });
+        saveTx();
+        refreshAll();
+        toast('Transaction Deleted', '"' + title + '" has been removed.', 'error', 3000);
+      }
+    );
+  }
+
+  filterBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      filterBtns.forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
       activeFilter = this.dataset.filter;
       renderTable();
     });
   });
 
-  if (productLinkToggle) {
-    productLinkToggle.addEventListener("click", function () {
-      var h = productLinkBody && productLinkBody.classList.contains("hidden");
-      if (productLinkBody) productLinkBody.classList.toggle("hidden", !h);
-      if (productLinkArrow) productLinkArrow.classList.toggle("open", h);
-    });
-  }
-
-function populateProductDropdown() {
-  var cur = txProductSelect.value;
-  txProductSelect.innerHTML = '<option value="">— None —</option>';
-
-  inventory.forEach(function(p) {
-    var opt = document.createElement("option");
-    opt.value = p.id;
-    opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
-    if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
-    txProductSelect.appendChild(opt);
+  /* ══════════════════════════════════════════════════════════
+     INVENTORY
+  ══════════════════════════════════════════════════════════ */
+  imgFileInput.addEventListener('change', function(){
+    if (this.files && this.files[0]) readImageFile(this.files[0]);
   });
 
-  txProductSelect.value = cur;
-  updateProdLinkInfo();
-}
+  imgUploadArea.addEventListener('dragover', function(e){
+    e.preventDefault();
+    imgUploadArea.classList.add('drag-over');
+  });
 
-  function updateProdLinkInfo() {
-    if (!txProductSelect || !prodLinkInfo) return;
+  imgUploadArea.addEventListener('dragleave', function(){
+    imgUploadArea.classList.remove('drag-over');
+  });
 
-    var pid = txProductSelect.value;
-    var qty = parseInt(txProdQty ? txProdQty.value : 0) || 0;
+  imgUploadArea.addEventListener('drop', function(e){
+    e.preventDefault();
+    imgUploadArea.classList.remove('drag-over');
+    var f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) readImageFile(f);
+  });
 
-    if (!pid) {
-      prodLinkInfo.classList.add("empty");
-      prodLinkInfo.innerHTML = "";
+  function readImageFile(file){
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Image Too Large', 'Please use an image under 2MB.', 'error');
       return;
     }
 
-    var p = inventory.find(function (p) { return p.id === pid; });
-    if (!p) {
-      prodLinkInfo.classList.add("empty");
+    var r = new FileReader();
+    r.onload = function(e){
+      currentImgB64 = e.target.result;
+      showImgPreview(currentImgB64);
+    };
+    r.readAsDataURL(file);
+  }
+
+  function showImgPreview(src){
+    imgPreview.src = src;
+    imgPreview.classList.remove('hidden');
+    imgPlaceholder.classList.add('hidden');
+    removeImgBtn.classList.remove('hidden');
+  }
+
+  function clearImgPreview(){
+    currentImgB64 = null;
+    imgPreview.src = '';
+    imgPreview.classList.add('hidden');
+    imgPlaceholder.classList.remove('hidden');
+    removeImgBtn.classList.add('hidden');
+    imgFileInput.value = '';
+  }
+
+  removeImgBtn.addEventListener('click', clearImgPreview);
+
+  function renderInventory(){
+    invGrid.innerHTML = '';
+
+    var lowItems = inventory.filter(function(p){ return p.qty <= LOW_STOCK; });
+
+    if (settings.lowStockAlert && lowItems.length) {
+      lowStockBanner.classList.remove('hidden');
+      lowStockNames.textContent = lowItems.map(function(p){
+        return p.name + ' (' + p.qty + ')';
+      }).join(', ');
+    } else {
+      lowStockBanner.classList.add('hidden');
+    }
+
+    if (!inventory.length) {
+      invEmpty.classList.remove('hidden');
       return;
     }
 
-    prodLinkInfo.classList.remove("empty");
+    invEmpty.classList.add('hidden');
 
-    var warn = p.qty === 0
-      ? '<div class="prod-link-info-stock-warn">⚠ Out of stock!</div>'
-      : p.qty <= LOW_STOCK
-      ? '<div class="prod-link-info-stock-warn">⚠ Low stock: ' + p.qty + " left</div>"
-      : "";
+    inventory.forEach(function(p){
+      var isLow = p.qty <= LOW_STOCK;
+      var card = document.createElement('div');
+      card.className = 'product-card' + (isLow ? ' low-stock' : '');
 
-    prodLinkInfo.innerHTML =
-      '<div class="prod-link-info-name">' + esc(p.name) + "</div>" +
-      '<div class="prod-link-info-row">Price: ' + fmt(p.price) + "/unit</div>" +
-      '<div class="prod-link-info-row">In stock: ' + p.qty + "</div>" +
-      (qty > 0 ? '<div class="prod-link-info-row">Total: <strong>' + fmt(qty * p.price) + "</strong></div>" : "") +
-      warn;
+      var imgHtml = p.image
+        ? '<img class="product-img" src="' + p.image + '" alt="' + esc(p.name) + '" />'
+        : '<div class="product-img-placeholder">📦</div>';
 
-    if (qty > 0 && txAmount) txAmount.value = (qty * p.price).toFixed(2);
-  }      if(settings.lowStockAlert && qty<=LOW_STOCK && currentUser) {
+      card.innerHTML =
+        imgHtml +
+        '<div class="product-body">' +
+          '<div class="product-name">' + esc(p.name) + '</div>' +
+          '<div class="product-desc">' + esc(p.desc || '') + '</div>' +
+          '<div class="product-meta">' +
+            '<div class="product-qty">Stock: <strong>' + p.qty + '</strong></div>' +
+            '<div class="product-price">' + fmt(p.price) + '/unit</div>' +
+          '</div>' +
+          (isLow && settings.lowStockAlert ? '<span class="low-stock-tag">⚠ Low Stock</span>' : '') +
+          '<div class="product-actions">' +
+            '<button class="btn-sell" onclick="AM.openSell(\'' + p.id + '\')" ' + (p.qty === 0 ? 'disabled' : '') + '>💰 Sell</button>' +
+            '<button class="btn-edit" onclick="AM.editProd(\'' + p.id + '\')">Edit</button>' +
+            '<button class="btn-delete" onclick="AM.deleteProd(\'' + p.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>';
+
+      invGrid.appendChild(card);
+    });
+
+    populateProductDropdown();
+  }
+
+  invSaveBtn.addEventListener('click', function(){
+    invNameError.textContent = '';
+    invQtyError.textContent = '';
+    invPriceError.textContent = '';
+
+    var valid = true;
+
+    if (!invName.value.trim()) {
+      invNameError.textContent = 'Name required.';
+      valid = false;
+    }
+
+    var qty = parseInt(invQty.value);
+    var price = parseFloat(invPrice.value);
+
+    if (invQty.value === '' || isNaN(qty) || qty < 0) {
+      invQtyError.textContent = 'Enter qty ≥ 0.';
+      valid = false;
+    }
+
+    if (invPrice.value === '' || isNaN(price) || price < 0) {
+      invPriceError.textContent = 'Enter price ≥ 0.';
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    var id = invEditId.value;
+
+    if (id) {
+      var i = inventory.findIndex(function(p){ return p.id === id; });
+      if (i !== -1) {
+        inventory[i].name = invName.value.trim();
+        inventory[i].desc = invDesc.value.trim();
+        inventory[i].qty = qty;
+        inventory[i].price = price;
+        if (currentImgB64 !== null) inventory[i].image = currentImgB64;
+      }
+
+      exitInvEdit();
+      toast('Product Updated', invName.value.trim() + ' has been updated.', 'success');
+    } else {
+      var newProd = {
+        id: genId(),
+        name: invName.value.trim(),
+        desc: invDesc.value.trim(),
+        qty: qty,
+        price: price,
+        image: currentImgB64 || null
+      };
+
+      inventory.push(newProd);
+      invName.value = '';
+      invDesc.value = '';
+      invQty.value = '';
+      invPrice.value = '';
+      clearImgPreview();
+      toast('Product Added', newProd.name + ' added to inventory.', 'success');
+            if(settings.lowStockAlert && qty<=LOW_STOCK && currentUser) {
         sendLowStockEmail(settings.name||'there', currentUser.email, [{name:newProd.name,qty:qty}])
           .then(function() {
             toast('Low Stock Alert', newProd.name + ' starts with low stock. Email alert sent.', 'warning', 4000);
@@ -980,6 +1245,7 @@ function populateProductDropdown() {
           });
       }
     }
+
     saveInv();
     renderInventory();
   });
@@ -987,6 +1253,7 @@ function populateProductDropdown() {
   function editProd(id){
     var p = inventory.find(function(p){ return p.id===id; });
     if(!p) return;
+
     invEditId.value = p.id;
     invName.value = p.name;
     invDesc.value = p.desc || '';
@@ -995,13 +1262,18 @@ function populateProductDropdown() {
     invFormTitle.textContent = 'Edit Product';
     invSaveBtn.textContent = 'Save Changes';
     invCancelBtn.classList.remove('hidden');
+
     if(p.image){
       showImgPreview(p.image);
       currentImgB64 = null;
     } else {
       clearImgPreview();
     }
-    document.querySelector('#section-inventory .form-card').scrollIntoView({behavior:'smooth',block:'start'});
+
+    document.querySelector('#section-inventory .form-card').scrollIntoView({
+      behavior:'smooth',
+      block:'start'
+    });
   }
 
   function exitInvEdit(){
@@ -1024,6 +1296,7 @@ function populateProductDropdown() {
   function deleteProd(id){
     var p = inventory.find(function(p){ return p.id===id; });
     var name = p ? p.name : 'Product';
+
     showConfirm(
       'Delete Product',
       'Delete "' + name + '" from inventory? This cannot be undone.',
@@ -1041,6 +1314,7 @@ function populateProductDropdown() {
   function openSell(id){
     var p = inventory.find(function(p){ return p.id===id; });
     if(!p) return;
+
     sellTargetId = id;
     sellModalName.textContent = p.name + '  —  ' + fmt(p.price) + '/unit  (Stock: ' + p.qty + ')';
     sellQtyInput.value = '1';
@@ -1061,10 +1335,12 @@ function populateProductDropdown() {
     if(!p) return;
 
     var qty = parseInt(sellQtyInput.value);
+
     if(!sellQtyInput.value || isNaN(qty) || qty <= 0){
       sellQtyError.textContent = 'Enter qty > 0.';
       return;
     }
+
     if(qty > p.qty){
       sellQtyError.textContent = 'Only ' + p.qty + ' in stock.';
       return;
@@ -1142,6 +1418,7 @@ function populateProductDropdown() {
 
   saveProfileBtn.addEventListener('click',function(){
     if(!currentUser) return;
+
     settings.name = setName.value.trim();
     settings.business = setBusiness.value.trim();
 
@@ -1173,6 +1450,7 @@ function populateProductDropdown() {
     }
 
     toast('Currency Updated', 'All amounts now show in ' + settings.currency, 'success');
+
     if(currentUser) {
       db.collection('users').doc(currentUser.uid).update({ currency: settings.currency });
     }
@@ -1181,11 +1459,13 @@ function populateProductDropdown() {
   toggleLowStock.addEventListener('change',function(){
     settings.lowStockAlert = this.checked;
     renderInventory();
+
     toast(
       this.checked ? 'Low Stock Alerts ON' : 'Low Stock Alerts OFF',
       this.checked ? 'You will be notified when stock is low.' : 'Low stock alerts are now disabled.',
       this.checked ? 'success' : 'info'
     );
+
     if(currentUser) {
       db.collection('users').doc(currentUser.uid).update({ lowStockAlert: settings.lowStockAlert });
     }
@@ -1195,6 +1475,7 @@ function populateProductDropdown() {
     settings.expenseWarn = this.checked;
     updateDashboard();
     toast(this.checked ? 'Expense Warning ON' : 'Expense Warning OFF', '', this.checked ? 'success' : 'info', 2000);
+
     if(currentUser) {
       db.collection('users').doc(currentUser.uid).update({ expenseWarn: settings.expenseWarn });
     }
@@ -1202,6 +1483,7 @@ function populateProductDropdown() {
 
   saveThresholdBtn.addEventListener('click', function() {
     var val = parseInt(setThreshold.value);
+
     if (isNaN(val) || val < 1) {
       toast('Invalid Threshold', 'Please enter a number greater than 0.', 'error');
       return;
@@ -1219,11 +1501,13 @@ function populateProductDropdown() {
 
   toggleDailyEmail.addEventListener('change',function(){
     settings.dailyEmail = this.checked;
+
     toast(
       this.checked ? 'Daily Emails ON' : 'Daily Emails OFF',
       this.checked ? 'You will receive a daily summary email.' : 'Daily summary emails are disabled.',
       this.checked ? 'success' : 'info'
     );
+
     if(currentUser) {
       db.collection('users').doc(currentUser.uid).update({ dailyEmail: settings.dailyEmail });
     }
@@ -1250,11 +1534,14 @@ function populateProductDropdown() {
     document.querySelectorAll('.section').forEach(function(s){
       s.classList.remove('active');
     });
+
     var t = document.getElementById('section-' + name);
     if (t) t.classList.add('active');
+
     navItems.forEach(function(n){
       n.classList.toggle('active', n.dataset.section === name);
     });
+
     topbarTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
   }
 
