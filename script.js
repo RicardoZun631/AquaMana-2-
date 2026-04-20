@@ -928,7 +928,7 @@ document.addEventListener("DOMContentLoaded", function () {
     inventory.forEach(function (p) {
       var opt = document.createElement("option");
       opt.value = p.id;
-      opt.textContent = p.name + " (Stock: " + p.qty + " @ " + fmt(p.price) + ")";
+      opt.textContent = p.name + " (Stock: " + p.qty + " at " + fmt(p.price) + ")";
       if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
       txProductSelect.appendChild(opt);
     });
