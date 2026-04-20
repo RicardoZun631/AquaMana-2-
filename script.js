@@ -1022,15 +1022,18 @@ document.addEventListener('DOMContentLoaded', function () {
     );
   });
 
-    function showSection(name){
+  function showSection(name){
     document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
-    var t=document.getElementById('section-'+name); if(t)t.classList.add('active');
-    navItems.forEach(function(n){n.classList.toggle('active',n.dataset.section===name);});
-    topbarTitle.textContent=name.charAt(0).toUpperCase()+name.slice(1);
+    var t=document.getElementById('section-'+name);
+    if(t) t.classList.add('active');
+    navItems.forEach(function(n){
+      n.classList.toggle('active', n.dataset.section === name);
+    });
+    topbarTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
   }
 
   navItems.forEach(function(item){
-    item.addEventListener('click',function(e){
+    item.addEventListener('click', function(e){
       e.preventDefault();
       showSection(item.dataset.section);
     });
