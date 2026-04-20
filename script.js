@@ -2,39 +2,39 @@
 
 /* ── FIREBASE CONFIG ────────────────────────────────────────── */
 var firebaseConfig = {
-  apiKey: "AIzaSyDgYaAfXLU-j2g8TFsSkAL73qwqwXlGERc",
-  authDomain: "aquamana-be3d8.firebaseapp.com",
-  projectId: "aquamana-be3d8",
-  storageBucket: "aquamana-be3d8.firebasestorage.app",
+  apiKey:            "AIzaSyDgYaAfXLU-j2g8TFsSkAL73qwqwXlGERc",
+  authDomain:        "aquamana-be3d8.firebaseapp.com",
+  projectId:         "aquamana-be3d8",
+  storageBucket:     "aquamana-be3d8.firebasestorage.app",
   messagingSenderId: "461157381690",
-  appId: "1:461157381690:web:d70804952f7d625a25e703",
-  measurementId: "G-KXFWSTXQ16"
+  appId:             "1:461157381690:web:d70804952f7d625a25e703",
+  measurementId:     "G-KXFWSTXQ16"
 };
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
-var db = firebase.firestore();
+var db   = firebase.firestore();
 
 /* ── EMAILJS CONFIG ─────────────────────────────────────────── */
-var EJS_SERVICE = "service_qra8hni";
-var EJS_TEMPLATE = "template_q7bc1pb";
-var EJS_KEY = "c8pnyj3ZHpF97_Qjx";
+var EJS_SERVICE  = 'service_qra8hni';
+var EJS_TEMPLATE = 'template_q7bc1pb';
+var EJS_KEY      = 'c8pnyj3ZHpF97_Qjx';
 emailjs.init({ publicKey: EJS_KEY });
 
 /* ══════════════════════════════════════════════════════════════
    TOAST NOTIFICATION SYSTEM
 ══════════════════════════════════════════════════════════════ */
-var toastContainer = document.getElementById("toast-container");
+var toastContainer = document.getElementById('toast-container');
 
 /* ══════════════════════════════════════════════════════════════
    CUSTOM CONFIRM MODAL
 ══════════════════════════════════════════════════════════════ */
-var confirmModal = document.getElementById("confirm-modal");
-var confirmTitle = document.getElementById("confirm-title");
-var confirmMessage = document.getElementById("confirm-message");
-var confirmIcon = document.getElementById("confirm-icon");
-var confirmOkBtn = document.getElementById("confirm-ok-btn");
-var confirmCancelBtn = document.getElementById("confirm-cancel-btn");
-var _confirmCallback = null;
+var confirmModal      = document.getElementById('confirm-modal');
+var confirmTitle      = document.getElementById('confirm-title');
+var confirmMessage    = document.getElementById('confirm-message');
+var confirmIcon       = document.getElementById('confirm-icon');
+var confirmOkBtn      = document.getElementById('confirm-ok-btn');
+var confirmCancelBtn  = document.getElementById('confirm-cancel-btn');
+var _confirmCallback  = null;
 
 function showConfirm(title, message, icon, okLabel, callback) {
   if (!confirmModal || !confirmTitle || !confirmMessage || !confirmIcon || !confirmOkBtn) {
@@ -44,63 +44,61 @@ function showConfirm(title, message, icon, okLabel, callback) {
     return;
   }
 
-  confirmTitle.textContent = title;
+  confirmTitle.textContent   = title;
   confirmMessage.textContent = message;
-  confirmIcon.textContent = icon || "⚠️";
-  confirmOkBtn.textContent = okLabel || "Confirm";
+  confirmIcon.textContent    = icon || '⚠️';
+  confirmOkBtn.textContent   = okLabel || 'Confirm';
   _confirmCallback = callback;
-  confirmModal.classList.remove("hidden");
+  confirmModal.classList.remove('hidden');
 }
 
 if (confirmOkBtn && confirmCancelBtn && confirmModal) {
-  confirmOkBtn.addEventListener("click", function () {
-    confirmModal.classList.add("hidden");
+  confirmOkBtn.addEventListener('click', function() {
+    confirmModal.classList.add('hidden');
     if (_confirmCallback) {
       _confirmCallback();
       _confirmCallback = null;
     }
   });
 
-  confirmCancelBtn.addEventListener("click", function () {
-    confirmModal.classList.add("hidden");
+  confirmCancelBtn.addEventListener('click', function() {
+    confirmModal.classList.add('hidden');
     _confirmCallback = null;
   });
 
-  confirmModal.addEventListener("click", function (e) {
+  confirmModal.addEventListener('click', function(e) {
     if (e.target === confirmModal) {
-      confirmModal.classList.add("hidden");
+      confirmModal.classList.add('hidden');
       _confirmCallback = null;
     }
   });
 }
 
 function toast(title, message, type, duration) {
-  type = type || "info";
+  type     = type || 'info';
   duration = duration || 3000;
 
-  var icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+  var icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
 
-  var el = document.createElement("div");
-  el.className = "toast toast-" + type;
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + type;
   el.innerHTML =
-    '<span class="toast-icon">' + icons[type] + "</span>" +
+    '<span class="toast-icon">' + icons[type] + '</span>' +
     '<div class="toast-body">' +
-      '<div class="toast-title">' + title + "</div>" +
-      (message ? '<div class="toast-msg">' + message + "</div>" : "") +
-    "</div>" +
+      '<div class="toast-title">' + title + '</div>' +
+      (message ? '<div class="toast-msg">' + message + '</div>' : '') +
+    '</div>' +
     '<button class="toast-close" onclick="this.parentElement._remove()">✕</button>';
 
-  el._remove = function () {
-    el.classList.add("removing");
-    setTimeout(function () {
+  el._remove = function() {
+    el.classList.add('removing');
+    setTimeout(function() {
       if (el.parentNode) el.parentNode.removeChild(el);
     }, 280);
   };
 
-  if (toastContainer) {
-    toastContainer.appendChild(el);
-    setTimeout(function () { el._remove(); }, duration);
-  }
+  toastContainer.appendChild(el);
+  setTimeout(function() { el._remove(); }, duration);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -109,12 +107,12 @@ function toast(title, message, type, duration) {
 function sendEmail(toEmail, subject, message) {
   return emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
     to_email: toEmail,
-    subject: subject,
-    message: message
-  }).then(function (response) {
-    console.log("Email sent:", subject, response);
+    subject:  subject,
+    message:  message
+  }).then(function(response) {
+    console.log('Email sent:', subject, response);
     return response;
-  }).catch(function (err) {
+  }).catch(function(err) {
     console.error('EmailJS error for "' + subject + '":', err);
     throw err;
   });
@@ -122,246 +120,258 @@ function sendEmail(toEmail, subject, message) {
 
 function sendWelcomeEmail(name, email) {
   var msg =
-    "Hi " + name + "! 👋\n\n" +
-    "Welcome to AguaMana — your small business finance dashboard.\n\n" +
-    "Your account has been created successfully.\n\n" +
-    "Here’s what you can do:\n" +
-    "• Track your income and expenses\n" +
-    "• Manage your product inventory\n" +
-    "• View monthly financial summaries\n" +
-    "• Get alerts for low stock and high expenses\n\n" +
-    "Get started by adding your first transaction!\n\n" +
-    "— The AguaMana Team 💧";
+    'Hi ' + name + '! 👋\n\n' +
+    'Welcome to AguaMana — your small business finance dashboard.\n\n' +
+    'Your account has been created successfully.\n\n' +
+    'Here\'s what you can do:\n' +
+    '• Track your income and expenses\n' +
+    '• Manage your product inventory\n' +
+    '• View monthly financial summaries\n' +
+    '• Get alerts for low stock and high expenses\n\n' +
+    'Get started by adding your first transaction!\n\n' +
+    '— The AguaMana Team 💧';
 
-  return sendEmail(email, "Welcome to AguaMana! 💧", msg);
+  return sendEmail(email, 'Welcome to AguaMana! 💧', msg);
 }
 
 function sendDailySummaryEmail(name, email, txList, income, expenses, balance) {
-  var today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
+  var today = new Date().toLocaleDateString('en-US', {
+    weekday:'long',
+    month:'long',
+    day:'numeric',
+    year:'numeric'
   });
 
   var txLines = txList.length
-    ? txList.map(function (tx) {
-        return "  " + (tx.type === "income" ? "[+]" : "[-]") + " " + tx.title + " — " + tx.amount.toFixed(2);
-      }).join("\n")
-    : "  No transactions today.";
+    ? txList.map(function(tx) {
+        return '  ' + (tx.type === 'income' ? '[+]' : '[-]') + ' ' + tx.title + ' — ' + tx.amount.toFixed(2);
+      }).join('\n')
+    : '  No transactions today.';
 
   var msg =
-    "Hi " + name + ",\n\n" +
-    "Here is your AguaMana daily summary for " + today + ":\n\n" +
-    "📊 TODAY'S TRANSACTIONS:\n" + txLines + "\n\n" +
-    "💰 ALL-TIME TOTALS:\n" +
-    "  Total Income:   " + income + "\n" +
-    "  Total Expenses: " + expenses + "\n" +
-    "  Balance:        " + balance + "\n\n" +
-    "Keep up the great work! 💪\n\n" +
-    "— AguaMana 💧";
+    'Hi ' + name + ',\n\n' +
+    'Here is your AguaMana daily summary for ' + today + ':\n\n' +
+    '📊 TODAY\'S TRANSACTIONS:\n' + txLines + '\n\n' +
+    '💰 ALL-TIME TOTALS:\n' +
+    '  Total Income:   ' + income + '\n' +
+    '  Total Expenses: ' + expenses + '\n' +
+    '  Balance:        ' + balance + '\n\n' +
+    'Keep up the great work! 💪\n\n' +
+    '— AguaMana 💧';
 
-  return sendEmail(email, "AguaMana Daily Summary — " + today, msg);
+  return sendEmail(email, 'AguaMana Daily Summary — ' + today, msg);
 }
 
 function sendLowStockEmail(name, email, lowProducts) {
-  var lines = lowProducts.map(function (p) {
-    return "  • " + p.name + " — only " + p.qty + " unit" + (p.qty === 1 ? "" : "s") + " left";
-  }).join("\n");
+  var lines = lowProducts.map(function(p) {
+    return '  • ' + p.name + ' — only ' + p.qty + ' unit' + (p.qty === 1 ? '' : 's') + ' left';
+  }).join('\n');
 
   var msg =
-    "Hi " + name + ",\n\n" +
-    "⚠️ The following products in your AguaMana inventory are running low:\n\n" +
-    lines + "\n\n" +
-    "Please restock soon to avoid running out.\n\n" +
-    "— AguaMana 💧";
+    'Hi ' + name + ',\n\n' +
+    '⚠️ The following products in your AguaMana inventory are running low:\n\n' +
+    lines + '\n\n' +
+    'Please restock soon to avoid running out.\n\n' +
+    '— AguaMana 💧';
 
-  return sendEmail(email, "⚠️ AguaMana Low Stock Alert", msg);
+  return sendEmail(email, '⚠️ AguaMana Low Stock Alert', msg);
 }
 
 function sendExpenseWarningEmail(name, email, balance, income, expenses) {
   var msg =
-    "Hi " + name + ",\n\n" +
-    "🚨 Your AguaMana expenses have exceeded your income!\n\n" +
-    "  Total Income:   " + income + "\n" +
-    "  Total Expenses: " + expenses + "\n" +
-    "  Current Balance: " + balance + "\n\n" +
-    "Consider reviewing your recent expenses to get back on track.\n\n" +
-    "— AguaMana 💧";
+    'Hi ' + name + ',\n\n' +
+    '🚨 Your AguaMana expenses have exceeded your income!\n\n' +
+    '  Total Income:   ' + income + '\n' +
+    '  Total Expenses: ' + expenses + '\n' +
+    '  Current Balance: ' + balance + '\n\n' +
+    'Consider reviewing your recent expenses to get back on track.\n\n' +
+    '— AguaMana 💧';
 
-  return sendEmail(email, "🚨 AguaMana Expense Warning", msg);
+  return sendEmail(email, '🚨 AguaMana Expense Warning', msg);
 }
 /* ══════════════════════════════════════════════════════════════
    MAIN APP LOGIC
 ══════════════════════════════════════════════════════════════ */
-document.addEventListener("DOMContentLoaded", function () {
-  var loginPage = document.getElementById("login-page");
-  var app = document.getElementById("app");
-  var authLoading = document.getElementById("auth-loading");
-  var signinForm = document.getElementById("signin-form");
-  var emailInput = document.getElementById("email");
-  var passwordInput = document.getElementById("password");
-  var emailError = document.getElementById("email-error");
-  var passwordError = document.getElementById("password-error");
-  var signinError = document.getElementById("signin-error");
-  var loginBtn = document.getElementById("login-btn");
-  var registerForm = document.getElementById("register-form");
-  var regName = document.getElementById("reg-name");
-  var regBusiness = document.getElementById("reg-business");
-  var regEmail = document.getElementById("reg-email");
-  var regPassword = document.getElementById("reg-password");
-  var regNameError = document.getElementById("reg-name-error");
-  var regEmailError = document.getElementById("reg-email-error");
-  var regPwError = document.getElementById("reg-password-error");
-  var registerError = document.getElementById("register-error");
-  var registerBtn = document.getElementById("register-btn");
-  var tabSignin = document.getElementById("tab-signin");
-  var tabRegister = document.getElementById("tab-register");
-  var topbarTitle = document.getElementById("topbar-title");
-  var topbarName = document.getElementById("topbar-name");
-  var topbarEmailSub = document.getElementById("topbar-email");
-  var topbarAvatar = document.getElementById("topbar-avatar");
-  var logoutBtn = document.getElementById("logout-btn");
-  var navItems = document.querySelectorAll(".nav-item");
+document.addEventListener('DOMContentLoaded', function () {
+  var loginPage      = document.getElementById('login-page');
+  var app            = document.getElementById('app');
+  var authLoading    = document.getElementById('auth-loading');
+  var signinForm     = document.getElementById('signin-form');
+  var emailInput     = document.getElementById('email');
+  var passwordInput  = document.getElementById('password');
+  var emailError     = document.getElementById('email-error');
+  var passwordError  = document.getElementById('password-error');
+  var signinError    = document.getElementById('signin-error');
+  var loginBtn       = document.getElementById('login-btn');
+  var registerForm   = document.getElementById('register-form');
+  var regName        = document.getElementById('reg-name');
+  var regBusiness    = document.getElementById('reg-business');
+  var regEmail       = document.getElementById('reg-email');
+  var regPassword    = document.getElementById('reg-password');
+  var regNameError   = document.getElementById('reg-name-error');
+  var regEmailError  = document.getElementById('reg-email-error');
+  var regPwError     = document.getElementById('reg-password-error');
+  var registerError  = document.getElementById('register-error');
+  var registerBtn    = document.getElementById('register-btn');
+  var tabSignin      = document.getElementById('tab-signin');
+  var tabRegister    = document.getElementById('tab-register');
+  var topbarTitle    = document.getElementById('topbar-title');
+  var topbarName     = document.getElementById('topbar-name');
+  var topbarEmailSub = document.getElementById('topbar-email');
+  var topbarAvatar   = document.getElementById('topbar-avatar');
+  var logoutBtn      = document.getElementById('logout-btn');
+  var navItems       = document.querySelectorAll('.nav-item');
 
-  var elIncome = document.getElementById("total-income");
-  var elExpenses = document.getElementById("total-expenses");
-  var elBalance = document.getElementById("total-balance");
-  var elCount = document.getElementById("total-count");
-  var recentList = document.getElementById("recent-list");
-  var monthSelect = document.getElementById("month-select");
-  var monthlyCards = document.getElementById("monthly-cards");
-  var monthlyTxSec = document.getElementById("monthly-tx-section");
-  var monthlyHolder = document.getElementById("monthly-placeholder");
-  var monthIncome = document.getElementById("month-income");
-  var monthExpenses = document.getElementById("month-expenses");
-  var monthBalance = document.getElementById("month-balance");
-  var monthCount = document.getElementById("month-count");
-  var monthlyTxList = document.getElementById("monthly-tx-list");
-  var monthlySearch = document.getElementById("monthly-search");
-  var monthlyPagBar = document.getElementById("monthly-pagination");
-  var monthlyPrevBtn = document.getElementById("monthly-prev-btn");
-  var monthlyNextBtn = document.getElementById("monthly-next-btn");
-  var monthlyPageInfo = document.getElementById("monthly-page-info");
+  var elIncome       = document.getElementById('total-income');
+  var elExpenses     = document.getElementById('total-expenses');
+  var elBalance      = document.getElementById('total-balance');
+  var elCount        = document.getElementById('total-count');
+  var recentList     = document.getElementById('recent-list');
+  var monthSelect    = document.getElementById('month-select');
+  var monthlyCards   = document.getElementById('monthly-cards');
+  var monthlyTxSec   = document.getElementById('monthly-tx-section');
+  var monthlyHolder  = document.getElementById('monthly-placeholder');
+  var monthIncome    = document.getElementById('month-income');
+  var monthExpenses  = document.getElementById('month-expenses');
+  var monthBalance   = document.getElementById('month-balance');
+  var monthCount     = document.getElementById('month-count');
+  var monthlyTxList   = document.getElementById('monthly-tx-list');
+  var monthlySearch   = document.getElementById('monthly-search');
+  var monthlyPagBar   = document.getElementById('monthly-pagination');
+  var monthlyPrevBtn  = document.getElementById('monthly-prev-btn');
+  var monthlyNextBtn  = document.getElementById('monthly-next-btn');
+  var monthlyPageInfo = document.getElementById('monthly-page-info');
+  var txPagBar        = document.getElementById('tx-pagination');
+  var txPrevBtn       = document.getElementById('tx-prev-btn');
+  var txNextBtn       = document.getElementById('tx-next-btn');
+  var txPageInfo      = document.getElementById('tx-page-info');
 
-  var formTitle = document.getElementById("form-title");
-  var editIdInput = document.getElementById("edit-id");
-  var txTitle = document.getElementById("tx-title");
-  var txAmount = document.getElementById("tx-amount");
-  var txType = document.getElementById("tx-type");
-  var txNote = document.getElementById("tx-note");
-  var saveBtn = document.getElementById("save-btn");
-  var cancelBtn = document.getElementById("cancel-edit-btn");
-  var txTitleError = document.getElementById("tx-title-error");
-  var txAmtError = document.getElementById("tx-amount-error");
-  var txTbody = document.getElementById("tx-tbody");
-  var txEmpty = document.getElementById("tx-empty");
-  var searchInput = document.getElementById("search-input");
-  var filterBtns = document.querySelectorAll(".filter-btn");
-  var currencyLabels = document.querySelectorAll(".currency-label");
+  var formTitle      = document.getElementById('form-title');
+  var editIdInput    = document.getElementById('edit-id');
+  var txTitle        = document.getElementById('tx-title');
+  var txAmount       = document.getElementById('tx-amount');
+  var txType         = document.getElementById('tx-type');
+  var txNote         = document.getElementById('tx-note');
+  var saveBtn        = document.getElementById('save-btn');
+  var cancelBtn      = document.getElementById('cancel-edit-btn');
+  var txTitleError   = document.getElementById('tx-title-error');
+  var txAmtError     = document.getElementById('tx-amount-error');
+  var txTbody        = document.getElementById('tx-tbody');
+  var txEmpty        = document.getElementById('tx-empty');
+  var searchInput    = document.getElementById('search-input');
+  var filterBtns     = document.querySelectorAll('.filter-btn');
+  var currencyLabels = document.querySelectorAll('.currency-label');
 
-  var productLinkToggle = document.getElementById("product-link-toggle");
-  var productLinkBody = document.getElementById("product-link-body");
-  var productLinkArrow = document.getElementById("product-link-arrow");
-  var txProductSelect = document.getElementById("tx-product");
-  var txProdQty = document.getElementById("tx-prod-qty");
-  var txProdQtyError = document.getElementById("tx-prod-qty-error");
-  var prodLinkInfo = document.getElementById("prod-link-info");
+  var productLinkToggle = document.getElementById('product-link-toggle');
+  var productLinkBody   = document.getElementById('product-link-body');
+  var productLinkArrow  = document.getElementById('product-link-arrow');
+  var txProductSelect   = document.getElementById('tx-product');
+  var txProdQty         = document.getElementById('tx-prod-qty');
+  var txProdQtyError    = document.getElementById('tx-prod-qty-error');
+  var prodLinkInfo      = document.getElementById('prod-link-info');
 
-  var invFormTitle = document.getElementById("inv-form-title");
-  var invEditId = document.getElementById("inv-edit-id");
-  var invName = document.getElementById("inv-name");
-  var invDesc = document.getElementById("inv-desc");
-  var invQty = document.getElementById("inv-qty");
-  var invPrice = document.getElementById("inv-price");
-  var invSaveBtn = document.getElementById("inv-save-btn");
-  var invCancelBtn = document.getElementById("inv-cancel-btn");
-  var invNameError = document.getElementById("inv-name-error");
-  var invQtyError = document.getElementById("inv-qty-error");
-  var invPriceError = document.getElementById("inv-price-error");
-  var invGrid = document.getElementById("inv-grid");
-  var invEmpty = document.getElementById("inv-empty");
-  var lowStockBanner = document.getElementById("low-stock-banner");
-  var lowStockNames = document.getElementById("low-stock-names");
-  var imgUploadArea = document.getElementById("img-upload-area");
-  var imgFileInput = document.getElementById("inv-image");
-  var imgPreview = document.getElementById("img-preview");
-  var imgPlaceholder = document.getElementById("img-placeholder");
-  var removeImgBtn = document.getElementById("remove-img-btn");
-  var sellModal = document.getElementById("sell-modal");
-  var sellModalName = document.getElementById("sell-modal-name");
-  var sellQtyInput = document.getElementById("sell-qty");
-  var sellQtyError = document.getElementById("sell-qty-error");
-  var sellTotal = document.getElementById("sell-total");
-  var sellConfirmBtn = document.getElementById("sell-confirm-btn");
-  var sellCancelBtn = document.getElementById("sell-cancel-btn");
+  var invFormTitle  = document.getElementById('inv-form-title');
+  var invEditId     = document.getElementById('inv-edit-id');
+  var invName       = document.getElementById('inv-name');
+  var invDesc       = document.getElementById('inv-desc');
+  var invQty        = document.getElementById('inv-qty');
+  var invPrice      = document.getElementById('inv-price');
+  var invSaveBtn    = document.getElementById('inv-save-btn');
+  var invCancelBtn  = document.getElementById('inv-cancel-btn');
+  var invNameError  = document.getElementById('inv-name-error');
+  var invQtyError   = document.getElementById('inv-qty-error');
+  var invPriceError = document.getElementById('inv-price-error');
+  var invGrid       = document.getElementById('inv-grid');
+  var invEmpty      = document.getElementById('inv-empty');
+  var lowStockBanner= document.getElementById('low-stock-banner');
+  var lowStockNames = document.getElementById('low-stock-names');
+  var imgUploadArea = document.getElementById('img-upload-area');
+  var imgFileInput  = document.getElementById('inv-image');
+  var imgPreview    = document.getElementById('img-preview');
+  var imgPlaceholder= document.getElementById('img-placeholder');
+  var removeImgBtn  = document.getElementById('remove-img-btn');
+  var sellModal     = document.getElementById('sell-modal');
+  var sellModalName = document.getElementById('sell-modal-name');
+  var sellQtyInput  = document.getElementById('sell-qty');
+  var sellQtyError  = document.getElementById('sell-qty-error');
+  var sellTotal     = document.getElementById('sell-total');
+  var sellConfirmBtn= document.getElementById('sell-confirm-btn');
+  var sellCancelBtn = document.getElementById('sell-cancel-btn');
 
-  var setName = document.getElementById("set-name");
-  var setEmail = document.getElementById("set-email");
-  var setBusiness = document.getElementById("set-business");
-  var saveProfileBtn = document.getElementById("save-profile-btn");
-  var profileSaved = document.getElementById("profile-saved");
-  var setCurrency = document.getElementById("set-currency");
-  var saveCurrencyBtn = document.getElementById("save-currency-btn");
-  var currencySaved = document.getElementById("currency-saved");
-  var toggleLowStock = document.getElementById("toggle-low-stock");
-  var toggleExpWarn = document.getElementById("toggle-expense-warn");
-  var toggleDailyEmail = document.getElementById("toggle-daily-email");
-  var setThreshold = document.getElementById("set-threshold");
-  var saveThresholdBtn = document.getElementById("save-threshold-btn");
-  var resetDataBtn = document.getElementById("reset-data-btn");
+  var setName         = document.getElementById('set-name');
+  var setEmail        = document.getElementById('set-email');
+  var setBusiness     = document.getElementById('set-business');
+  var saveProfileBtn  = document.getElementById('save-profile-btn');
+  var profileSaved    = document.getElementById('profile-saved');
+  var setCurrency     = document.getElementById('set-currency');
+  var saveCurrencyBtn = document.getElementById('save-currency-btn');
+  var currencySaved   = document.getElementById('currency-saved');
+  var toggleLowStock  = document.getElementById('toggle-low-stock');
+  var toggleExpWarn   = document.getElementById('toggle-expense-warn');
+  var toggleDailyEmail  = document.getElementById('toggle-daily-email');
+  var setThreshold      = document.getElementById('set-threshold');
+  var saveThresholdBtn  = document.getElementById('save-threshold-btn');
+  var resetDataBtn    = document.getElementById('reset-data-btn');
 
-  var transactions = [];
-  var inventory = [];
-  var activeFilter = "all";
-  var searchQuery = "";
-  var sellTargetId = null;
+  var transactions  = [];
+  var inventory     = [];
+  var activeFilter  = 'all';
+  var searchQuery   = '';
+  var sellTargetId  = null;
   var currentImgB64 = null;
-  var LOW_STOCK = 5;
-  var currentUser = null;
+  var LOW_STOCK     = 5;
+  var currentUser   = null;
   var expWarnEmailSentToday = false;
-  var ITEMS_PER_PAGE = 50;
+  var ITEMS_PER_PAGE     = 50;
+  var txCurrentPage      = 1;
   var monthlyCurrentPage = 1;
-  var monthlySearchQuery = "";
-  var currentMonthTxs = [];
+  var monthlySearchQuery = '';
+  var currentMonthTxs    = [];
 
   var settings = {
-    name: "",
-    email: "",
-    business: "",
-    currency: "$",
-    lowStockAlert: true,
-    expenseWarn: true,
-    dailyEmail: true,
-    lowStockThreshold: 5
+    name:          '',
+    email:         '',
+    business:      '',
+    currency:      '$',
+    lowStockAlert:      true,
+    expenseWarn:        true,
+    dailyEmail:         true,
+    lowStockThreshold:  5
   };
 
-  function txKey() { return "am_tx_" + (currentUser ? currentUser.uid : "guest"); }
-  function invKey() { return "am_inv_" + (currentUser ? currentUser.uid : "guest"); }
-  function saveTx() { localStorage.setItem(txKey(), JSON.stringify(transactions)); }
-  function loadTx() { var r = localStorage.getItem(txKey()); return r ? JSON.parse(r) : []; }
+  function txKey()  { return 'am_tx_'  + (currentUser ? currentUser.uid : 'guest'); }
+  function invKey() { return 'am_inv_' + (currentUser ? currentUser.uid : 'guest'); }
+  function saveTx()  { localStorage.setItem(txKey(),  JSON.stringify(transactions)); }
+  function loadTx()  { var r = localStorage.getItem(txKey());  return r ? JSON.parse(r) : []; }
   function saveInv() { localStorage.setItem(invKey(), JSON.stringify(inventory)); }
   function loadInv() { var r = localStorage.getItem(invKey()); return r ? JSON.parse(r) : []; }
 
-  function genId() { return "id_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6); }
-  function fmt(n) { return settings.currency + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function fmtDate(iso) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+  function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
+
+  function fmt(n) {
+    return settings.currency + Number(n).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+
+  function fmtDate(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
 
   function esc(str) {
-    var d = document.createElement("div");
-    d.appendChild(document.createTextNode(String(str || "")));
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(String(str || '')));
     return d.innerHTML;
   }
 
-  function showLoading() { if (authLoading) authLoading.classList.remove("hidden"); }
-  function hideLoading() { if (authLoading) authLoading.classList.add("hidden"); }
+  function showLoading()  { authLoading.classList.remove('hidden'); }
+  function hideLoading()  { authLoading.classList.add('hidden'); }
 
   function clearAuthErrors() {
-    [signinError, registerError].forEach(function (el) {
-      if (el) { el.classList.add("hidden"); el.textContent = ""; }
+    [signinError, registerError].forEach(function(el) {
+      el.classList.add('hidden');
+      el.textContent = '';
     });
-    [emailError, passwordError, regNameError, regEmailError, regPwError].forEach(function (el) {
-      if (el) el.textContent = "";
+    [emailError, passwordError, regNameError, regEmailError, regPwError].forEach(function(el) {
+      el.textContent = '';
     });
   }
     function applySettings() {
@@ -376,66 +386,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
     LOW_STOCK = settings.lowStockThreshold || 5;
 
-    currencyLabels.forEach(function (el) {
+    currencyLabels.forEach(function(el) {
       el.textContent = settings.currency;
     });
   }
 
   function updateTopbar() {
     if (!currentUser) return;
-    var displayName = settings.name || currentUser.email.split("@")[0];
+
+    var displayName = settings.name || currentUser.email.split('@')[0];
+
     if (topbarName) topbarName.textContent = displayName;
     if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
     if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
   }
 
-  tabSignin.addEventListener("click", function () {
-    tabSignin.classList.add("active");
-    tabRegister.classList.remove("active");
-    signinForm.classList.remove("hidden");
-    registerForm.classList.add("hidden");
+  tabSignin.addEventListener('click', function() {
+    tabSignin.classList.add('active');
+    tabRegister.classList.remove('active');
+    signinForm.classList.remove('hidden');
+    registerForm.classList.add('hidden');
     clearAuthErrors();
   });
 
-  tabRegister.addEventListener("click", function () {
-    tabRegister.classList.add("active");
-    tabSignin.classList.remove("active");
-    registerForm.classList.remove("hidden");
-    signinForm.classList.add("hidden");
+  tabRegister.addEventListener('click', function() {
+    tabRegister.classList.add('active');
+    tabSignin.classList.remove('active');
+    registerForm.classList.remove('hidden');
+    signinForm.classList.add('hidden');
     clearAuthErrors();
   });
 
-  loginBtn.addEventListener("click", function () {
+  loginBtn.addEventListener('click', function() {
     clearAuthErrors();
+
     var email = emailInput.value.trim();
     var pass = passwordInput.value;
     var valid = true;
 
-    if (!email) { emailError.textContent = "Email is required."; valid = false; }
-    if (!pass) { passwordError.textContent = "Password is required."; valid = false; }
+    if (!email) {
+      emailError.textContent = 'Email is required.';
+      valid = false;
+    }
+
+    if (!pass) {
+      passwordError.textContent = 'Password is required.';
+      valid = false;
+    }
+
     if (!valid) return;
 
     showLoading();
     loginBtn.disabled = true;
 
-    auth.signInWithEmailAndPassword(email, pass).catch(function (err) {
-      hideLoading();
-      loginBtn.disabled = false;
-      var msg = "Sign in failed.";
-      if (err.code === "auth/user-not-found") msg = "No account found with this email.";
-      if (err.code === "auth/wrong-password") msg = "Incorrect password.";
-      if (err.code === "auth/invalid-credential") msg = "Invalid email or password.";
-      if (err.code === "auth/too-many-requests") msg = "Too many attempts. Please wait.";
-      signinError.textContent = msg;
-      signinError.classList.remove("hidden");
-    });
+    auth.signInWithEmailAndPassword(email, pass)
+      .catch(function(err) {
+        hideLoading();
+        loginBtn.disabled = false;
+
+        var msg = 'Sign in failed.';
+        if (err.code === 'auth/user-not-found') msg = 'No account found with this email.';
+        if (err.code === 'auth/wrong-password') msg = 'Incorrect password.';
+        if (err.code === 'auth/invalid-credential') msg = 'Invalid email or password.';
+        if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Please wait.';
+
+        signinError.textContent = msg;
+        signinError.classList.remove('hidden');
+      });
   });
 
-  passwordInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") loginBtn.click();
+  passwordInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') loginBtn.click();
   });
 
-  registerBtn.addEventListener("click", function () {
+  registerBtn.addEventListener('click', function() {
     clearAuthErrors();
 
     var name = regName.value.trim();
@@ -444,67 +468,83 @@ document.addEventListener("DOMContentLoaded", function () {
     var pass = regPassword.value;
     var valid = true;
 
-    if (!name) { regNameError.textContent = "Name is required."; valid = false; }
-    if (!email) { regEmailError.textContent = "Email is required."; valid = false; }
-    if (!pass || pass.length < 6) { regPwError.textContent = "Password must be 6+ characters."; valid = false; }
+    if (!name) {
+      regNameError.textContent = 'Name is required.';
+      valid = false;
+    }
+
+    if (!email) {
+      regEmailError.textContent = 'Email is required.';
+      valid = false;
+    }
+
+    if (!pass || pass.length < 6) {
+      regPwError.textContent = 'Password must be 6+ characters.';
+      valid = false;
+    }
+
     if (!valid) return;
 
     showLoading();
     registerBtn.disabled = true;
 
     auth.createUserWithEmailAndPassword(email, pass)
-      .then(function (result) {
+      .then(function(result) {
         var user = result.user;
-        return db.collection("users").doc(user.uid).set({
+        return db.collection('users').doc(user.uid).set({
           name: name,
           business: business,
           email: email,
-          currency: "$",
+          currency: '$',
           lowStockAlert: true,
           expenseWarn: true,
           dailyEmail: true,
-          lowStockThreshold: 5,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function () {
+        }).then(function() {
           return sendWelcomeEmail(name, email);
         });
       })
-      .catch(function (err) {
+      .catch(function(err) {
         hideLoading();
         registerBtn.disabled = false;
-        var msg = "Registration failed.";
-        if (err.code === "auth/email-already-in-use") msg = "An account with this email already exists.";
-        if (err.code === "auth/weak-password") msg = "Password is too weak.";
+
+        var msg = 'Registration failed.';
+        if (err.code === 'auth/email-already-in-use') msg = 'An account with this email already exists.';
+        if (err.code === 'auth/weak-password') msg = 'Password is too weak.';
+
         registerError.textContent = msg;
-        registerError.classList.remove("hidden");
+        registerError.classList.remove('hidden');
       });
   });
 
-  auth.onAuthStateChanged(function (user) {
+  auth.onAuthStateChanged(function(user) {
     if (user) {
       currentUser = user;
-      db.collection("users").doc(user.uid).get()
-        .then(function (doc) {
+
+      db.collection('users').doc(user.uid).get()
+        .then(function(doc) {
           if (doc.exists) {
             var d = doc.data();
-            settings.name = d.name || "";
-            settings.business = d.business || "";
-            settings.currency = d.currency || "$";
-            settings.lowStockAlert = d.lowStockAlert !== undefined ? d.lowStockAlert : true;
-            settings.expenseWarn = d.expenseWarn !== undefined ? d.expenseWarn : true;
-            settings.dailyEmail = d.dailyEmail !== undefined ? d.dailyEmail : true;
+            settings.name          = d.name || '';
+            settings.business      = d.business || '';
+            settings.currency      = d.currency || '$';
+            settings.lowStockAlert     = d.lowStockAlert !== undefined ? d.lowStockAlert : true;
+            settings.expenseWarn       = d.expenseWarn !== undefined ? d.expenseWarn : true;
+            settings.dailyEmail        = d.dailyEmail !== undefined ? d.dailyEmail : true;
             settings.lowStockThreshold = d.lowStockThreshold !== undefined ? d.lowStockThreshold : 5;
+            LOW_STOCK = settings.lowStockThreshold;
           }
+
           settings.email = user.email;
           transactions = loadTx();
           inventory = loadInv();
-          showApp();
+          showApp(user);
         })
-        .catch(function () {
+        .catch(function() {
           settings.email = user.email;
           transactions = loadTx();
           inventory = loadInv();
-          showApp();
+          showApp(user);
         });
     } else {
       currentUser = null;
@@ -513,115 +553,120 @@ document.addEventListener("DOMContentLoaded", function () {
       hideLoading();
       loginBtn.disabled = false;
       registerBtn.disabled = false;
-      loginPage.classList.remove("hidden");
-      app.classList.add("hidden");
+      loginPage.classList.remove('hidden');
+      app.classList.add('hidden');
     }
   });
 
-  function showApp() {
+  function showApp(user) {
     hideLoading();
-    if (loginPage) loginPage.classList.add("hidden");
-    if (app) app.classList.remove("hidden");
+    if (loginPage) loginPage.classList.add('hidden');
+    if (app) app.classList.remove('hidden');
     applySettings();
     updateTopbar();
     refreshAll();
-    showSection("dashboard");
+    showSection('dashboard');
     checkDailySummaryEmail();
   }
 
-  logoutBtn.addEventListener("click", function () {
-    auth.signOut().then(function () {
+  logoutBtn.addEventListener('click', function() {
+    auth.signOut().then(function() {
       txProductSelect.innerHTML = '<option value="">— None —</option>';
-      txProdQty.value = "";
-      prodLinkInfo.classList.add("empty");
-      prodLinkInfo.innerHTML = "";
+      txProdQty.value = '';
+      prodLinkInfo.classList.add('empty');
+      prodLinkInfo.innerHTML = '';
       LOW_STOCK = 5;
       expWarnEmailSentToday = false;
-      toast("Signed out", "See you next time!", "info");
+      toast('Signed out', 'See you next time!', 'info');
     });
   });
 
+  /* ══════════════════════════════════════════════════════════
+     DAILY SUMMARY EMAIL
+  ══════════════════════════════════════════════════════════ */
   function checkDailySummaryEmail() {
     if (!settings.dailyEmail || !currentUser) return;
 
-    var key = "am_daily_" + currentUser.uid;
+    var key = 'am_daily_' + currentUser.uid;
     var lastSent = localStorage.getItem(key);
     var today = new Date().toDateString();
 
     if (lastSent === today) return;
 
-    var todayTxs = transactions.filter(function (tx) {
+    var todayTxs = transactions.filter(function(tx) {
       return new Date(tx.date).toDateString() === today;
     });
 
-    var inc = 0, exp = 0;
-    transactions.forEach(function (tx) {
-      if (tx.type === "income") inc += tx.amount;
+    var inc = 0;
+    var exp = 0;
+
+    transactions.forEach(function(tx) {
+      if (tx.type === 'income') inc += tx.amount;
       else exp += tx.amount;
     });
 
     sendDailySummaryEmail(
-      settings.name || "there",
+      settings.name || 'there',
       currentUser.email,
       todayTxs,
       fmt(inc),
       fmt(exp),
       fmt(inc - exp)
-    ).then(function () {
+    ).then(function() {
       localStorage.setItem(key, today);
-      toast("Daily Summary", "Your daily summary email has been sent!", "info", 4000);
-    }).catch(function (err) {
-      toast("Daily Summary Failed", "Could not send the summary email. Please check your EmailJS setup.", "error", 5000);
-      console.error("Daily summary failed:", err);
+      toast('Daily Summary', 'Your daily summary email has been sent!', 'info', 4000);
+    }).catch(function(err) {
+      toast('Daily Summary Failed', 'Could not send the summary email. Please check your EmailJS setup.', 'error', 5000);
+      console.error('Daily summary failed:', err);
     });
   }
     /* ══════════════════════════════════════════════════════════
      DASHBOARD
   ══════════════════════════════════════════════════════════ */
   function updateDashboard() {
-    var income = 0, expenses = 0;
+    var income = 0;
+    var expenses = 0;
 
-    transactions.forEach(function (tx) {
-      if (tx.type === "income") income += tx.amount;
+    transactions.forEach(function(tx) {
+      if (tx.type === 'income') income += tx.amount;
       else expenses += tx.amount;
     });
 
     var balance = income - expenses;
 
-    if (elIncome) elIncome.textContent = fmt(income);
-    if (elExpenses) elExpenses.textContent = fmt(expenses);
-    if (elBalance) {
-      elBalance.textContent = fmt(balance);
-      elBalance.style.color = (settings.expenseWarn && balance < 0) ? "var(--expense)" : "var(--accent)";
-    }
-    if (elCount) elCount.textContent = transactions.length;
+    elIncome.textContent   = fmt(income);
+    elExpenses.textContent = fmt(expenses);
+    elBalance.textContent  = fmt(balance);
+    elCount.textContent    = transactions.length;
+    elBalance.style.color  = (settings.expenseWarn && balance < 0) ? 'var(--expense)' : 'var(--accent)';
 
     if (settings.expenseWarn && balance < 0 && !expWarnEmailSentToday && currentUser) {
-      sendExpenseWarningEmail(settings.name || "there", currentUser.email, fmt(balance), fmt(income), fmt(expenses))
-        .then(function () {
+      sendExpenseWarningEmail(settings.name || 'there', currentUser.email, fmt(balance), fmt(income), fmt(expenses))
+        .then(function() {
           expWarnEmailSentToday = true;
-          toast("Expense Warning", "Your expenses exceed your income. An alert email was sent.", "warning", 5000);
+          toast('Expense Warning', 'Your expenses exceed your income. An alert email was sent.', 'warning', 5000);
         })
-        .catch(function (err) {
-          toast("Expense Alert Failed", "The warning email could not be sent.", "error", 5000);
-          console.error("Expense warning email failed:", err);
+        .catch(function(err) {
+          toast('Expense Alert Failed', 'The warning email could not be sent.', 'error', 5000);
+          console.error('Expense warning email failed:', err);
         });
     }
 
-    recentList.innerHTML = "";
+    recentList.innerHTML = '';
+
     if (!transactions.length) {
       recentList.innerHTML = '<p class="empty-state">No transactions yet.</p>';
     } else {
-      transactions.slice().sort(function (a, b) {
+      transactions.slice().sort(function(a,b) {
         return new Date(b.date) - new Date(a.date);
-      }).slice(0, 5).forEach(function (tx) {
-        var el = document.createElement("div");
-        el.className = "recent-item";
+      }).slice(0,5).forEach(function(tx) {
+        var el = document.createElement('div');
+        el.className = 'recent-item';
         el.innerHTML =
-          "<div><div class=\"recent-title\">" + esc(tx.title) + "</div><div class=\"recent-date\">" + fmtDate(tx.date) + "</div></div>" +
-          "<div style=\"display:flex;align-items:center;gap:8px;\">" +
-          "<span class=\"" + (tx.type === "income" ? "amount-income" : "amount-expense") + "\">" + (tx.type === "income" ? "+" : "-") + fmt(tx.amount) + "</span>" +
-          "<span class=\"badge badge-" + tx.type + "\">" + tx.type + "</span></div>";
+          '<div><div class="recent-title">' + esc(tx.title) + '</div><div class="recent-date">' + fmtDate(tx.date) + '</div></div>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span class="' + (tx.type === 'income' ? 'amount-income' : 'amount-expense') + '">' + (tx.type === 'income' ? '+' : '-') + fmt(tx.amount) + '</span>' +
+          '<span class="badge badge-' + tx.type + '">' + tx.type + '</span></div>';
         recentList.appendChild(el);
       });
     }
@@ -633,20 +678,26 @@ document.addEventListener("DOMContentLoaded", function () {
     var current = monthSelect.value;
     var months = {};
 
-    transactions.forEach(function (tx) {
+    transactions.forEach(function(tx) {
       var d = new Date(tx.date);
-      var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0');
       months[key] = true;
     });
 
-    var sorted = Object.keys(months).sort(function (a, b) { return b.localeCompare(a); });
+    var sorted = Object.keys(months).sort(function(a,b) {
+      return b.localeCompare(a);
+    });
 
     monthSelect.innerHTML = '<option value="">— Select a month —</option>';
 
-    sorted.forEach(function (key) {
-      var p = key.split("-");
-      var label = new Date(parseInt(p[0]), parseInt(p[1]) - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-      var opt = document.createElement("option");
+    sorted.forEach(function(key) {
+      var p = key.split('-');
+      var label = new Date(parseInt(p[0]), parseInt(p[1]) - 1, 1).toLocaleDateString('en-US', {
+        month:'long',
+        year:'numeric'
+      });
+
+      var opt = document.createElement('option');
       opt.value = key;
       opt.textContent = label;
       monthSelect.appendChild(opt);
@@ -656,57 +707,59 @@ document.addEventListener("DOMContentLoaded", function () {
       monthSelect.value = current;
       renderMonthlySummary(current);
     } else {
-      monthSelect.value = "";
-      monthlyCards.classList.add("hidden");
-      monthlyTxSec.classList.add("hidden");
-      monthlyHolder.classList.remove("hidden");
+      monthSelect.value = '';
+      monthlyCards.classList.add('hidden');
+      monthlyTxSec.classList.add('hidden');
+      monthlyHolder.classList.remove('hidden');
     }
   }
 
   function renderMonthlySummary(key) {
     if (!key) {
-      monthlyCards.classList.add("hidden");
-      monthlyTxSec.classList.add("hidden");
-      monthlyHolder.classList.remove("hidden");
+      monthlyCards.classList.add('hidden');
+      monthlyTxSec.classList.add('hidden');
+      monthlyHolder.classList.remove('hidden');
       return;
     }
 
-    var p = key.split("-");
+    var p  = key.split('-');
     var yr = parseInt(p[0]);
     var mo = parseInt(p[1]) - 1;
 
-    var allMonthTxs = transactions.filter(function (tx) {
+    var allMonthTxs = transactions.filter(function(tx) {
       var d = new Date(tx.date);
       return d.getFullYear() === yr && d.getMonth() === mo;
     });
 
-    var inc = 0, exp = 0;
-    allMonthTxs.forEach(function (tx) {
-      if (tx.type === "income") inc += tx.amount;
+    var inc = 0;
+    var exp = 0;
+
+    allMonthTxs.forEach(function(tx) {
+      if (tx.type === 'income') inc += tx.amount;
       else exp += tx.amount;
     });
 
     var bal = inc - exp;
 
-    monthIncome.textContent = fmt(inc);
+    monthIncome.textContent   = fmt(inc);
     monthExpenses.textContent = fmt(exp);
-    monthBalance.textContent = fmt(bal);
-    monthCount.textContent = allMonthTxs.length;
-    monthBalance.style.color = bal < 0 ? "var(--expense)" : "var(--accent)";
+    monthBalance.textContent  = fmt(bal);
+    monthCount.textContent    = allMonthTxs.length;
+    monthBalance.style.color  = bal < 0 ? 'var(--expense)' : 'var(--accent)';
 
-    monthlyCards.classList.remove("hidden");
-    monthlyTxSec.classList.remove("hidden");
-    monthlyHolder.classList.add("hidden");
+    monthlyCards.classList.remove('hidden');
+    monthlyTxSec.classList.remove('hidden');
+    monthlyHolder.classList.add('hidden');
 
     var filtered = allMonthTxs.slice();
     if (monthlySearchQuery.trim()) {
       var q = monthlySearchQuery.toLowerCase();
-      filtered = filtered.filter(function (tx) {
+      filtered = filtered.filter(function(tx) {
         return tx.title.toLowerCase().indexOf(q) !== -1;
       });
     }
 
-    filtered.sort(function (a, b) {
+    filtered.sort(function(a,b) {
       return new Date(b.date) - new Date(a.date);
     });
 
@@ -715,11 +768,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderMonthlyPage() {
-    monthlyTxList.innerHTML = "";
+    monthlyTxList.innerHTML = '';
 
     if (!currentMonthTxs.length) {
       monthlyTxList.innerHTML = '<p class="empty-state">No transactions match your search.</p>';
-      monthlyPagBar.classList.add("hidden");
+      monthlyPagBar.classList.add('hidden');
       return;
     }
 
@@ -728,47 +781,56 @@ document.addEventListener("DOMContentLoaded", function () {
     if (monthlyCurrentPage < 1) monthlyCurrentPage = 1;
 
     var start = (monthlyCurrentPage - 1) * ITEMS_PER_PAGE;
-    var page = currentMonthTxs.slice(start, start + ITEMS_PER_PAGE);
+    var page  = currentMonthTxs.slice(start, start + ITEMS_PER_PAGE);
 
-    page.forEach(function (tx) {
-      var row = document.createElement("div");
-      row.className = "monthly-tx-row";
+    page.forEach(function(tx) {
+      var row = document.createElement('div');
+      row.className = 'monthly-tx-row';
       row.innerHTML =
-        "<div class=\"monthly-tx-left\">" +
-          "<div class=\"monthly-tx-title\">" + esc(tx.title) + "</div>" +
-          (tx.note ? "<div class=\"monthly-tx-note\">" + esc(tx.note) + "</div>" : "") +
-          "<div class=\"monthly-tx-note\">" + fmtDate(tx.date) + "</div>" +
-        "</div>" +
-        "<div class=\"monthly-tx-right\">" +
-          "<span class=\"" + (tx.type === "income" ? "amount-income" : "amount-expense") + "\">" + (tx.type === "income" ? "+" : "-") + fmt(tx.amount) + "</span>" +
-          "<span class=\"badge badge-" + tx.type + "\">" + tx.type + "</span>" +
-        "</div>";
+        '<div class="monthly-tx-left">' +
+          '<div class="monthly-tx-title">' + esc(tx.title) + '</div>' +
+          (tx.note ? '<div class="monthly-tx-note">' + esc(tx.note) + '</div>' : '') +
+          '<div class="monthly-tx-note">' + fmtDate(tx.date) + '</div>' +
+        '</div>' +
+        '<div class="monthly-tx-right">' +
+          '<span class="' + (tx.type === 'income' ? 'amount-income' : 'amount-expense') + '">' +
+            (tx.type === 'income' ? '+' : '-') + fmt(tx.amount) +
+          '</span>' +
+          '<span class="badge badge-' + tx.type + '">' + tx.type + '</span>' +
+        '</div>';
       monthlyTxList.appendChild(row);
     });
 
     if (currentMonthTxs.length > ITEMS_PER_PAGE) {
-      monthlyPagBar.classList.remove("hidden");
-      monthlyPageInfo.textContent = "Page " + monthlyCurrentPage + " of " + totalPages + " (" + currentMonthTxs.length + " shown)";
+      monthlyPagBar.classList.remove('hidden');
+      monthlyPageInfo.textContent = 'Page ' + monthlyCurrentPage + ' of ' + totalPages + '  (' + currentMonthTxs.length + ' shown)';
       monthlyPrevBtn.disabled = monthlyCurrentPage <= 1;
       monthlyNextBtn.disabled = monthlyCurrentPage >= totalPages;
     } else {
-      monthlyPagBar.classList.add("hidden");
+      monthlyPagBar.classList.add('hidden');
     }
   }
 
-  monthlyPrevBtn.addEventListener("click", function () {
+  monthlyPrevBtn.addEventListener('click', function() {
     monthlyCurrentPage--;
     renderMonthlyPage();
   });
 
-  monthlyNextBtn.addEventListener("click", function () {
+  monthlyNextBtn.addEventListener('click', function() {
     monthlyCurrentPage++;
     renderMonthlyPage();
   });
 
-  monthlySearch.addEventListener("input", function () {
-    monthlySearchQuery = this.value;
-        monthlyCurrentPage  = 1;
+  monthlySearch.addEventListener('input', function() {
+    monthlySearchQuery  = this.value;
+    monthlyCurrentPage  = 1;
+    renderMonthlySummary(monthSelect.value);
+  });
+
+  monthSelect.addEventListener('change', function() {
+    monthlySearchQuery  = '';
+    monthlySearch.value = '';
+    monthlyCurrentPage  = 1;
     renderMonthlySummary(this.value);
   });
 
@@ -778,25 +840,24 @@ document.addEventListener("DOMContentLoaded", function () {
     renderTable();
     renderInventory();
   }
-
-  /* ══════════════════════════════════════════════════════════
+    /* ══════════════════════════════════════════════════════════
      TRANSACTIONS
   ══════════════════════════════════════════════════════════ */
-  function renderTable(){
+  function renderTable() {
     var list = transactions.slice();
 
     if (activeFilter !== 'all') {
-      list = list.filter(function(t){ return t.type === activeFilter; });
+      list = list.filter(function(t) { return t.type === activeFilter; });
     }
 
     if (searchQuery.trim()) {
       var q = searchQuery.toLowerCase();
-      list = list.filter(function(t){
+      list = list.filter(function(t) {
         return t.title.toLowerCase().indexOf(q) !== -1;
       });
     }
 
-    list.sort(function(a,b){
+    list.sort(function(a,b) {
       return new Date(b.date) - new Date(a.date);
     });
 
@@ -809,13 +870,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     txEmpty.classList.add('hidden');
 
-    list.forEach(function(tx){
+    list.forEach(function(tx) {
       var tr = document.createElement('tr');
       tr.innerHTML =
         '<td>' + esc(tx.title) + '</td>' +
-        '<td class="' + (tx.type === 'income' ? 'amount-income' : 'amount-expense') + '">' +
-          (tx.type === 'income' ? '+' : '-') + fmt(tx.amount) +
-        '</td>' +
+        '<td class="' + (tx.type === 'income' ? 'amount-income' : 'amount-expense') + '">' + (tx.type === 'income' ? '+' : '-') + fmt(tx.amount) + '</td>' +
         '<td><span class="badge badge-' + tx.type + '">' + tx.type + '</span></td>' +
         '<td class="tx-note-cell">' + esc(tx.note || '—') + '</td>' +
         '<td>' + fmtDate(tx.date) + '</td>' +
@@ -828,7 +887,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  productLinkToggle.addEventListener('click', function(){
+  productLinkToggle.addEventListener('click', function() {
     var h = productLinkBody.classList.contains('hidden');
     productLinkBody.classList.toggle('hidden', !h);
     productLinkArrow.classList.toggle('open', h);
@@ -841,7 +900,7 @@ document.addEventListener("DOMContentLoaded", function () {
     inventory.forEach(function(p) {
       var opt = document.createElement("option");
       opt.value = p.id;
-      opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
+      opt.textContent = p.name + ' (Stock: ' + p.qty + ' @ ' + fmt(p.price) + ')';
       if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
       txProductSelect.appendChild(opt);
     });
@@ -850,7 +909,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateProdLinkInfo();
   }
 
-  function updateProdLinkInfo(){
+  function updateProdLinkInfo() {
     var pid = txProductSelect.value;
     var qty = parseInt(txProdQty.value) || 0;
 
@@ -860,7 +919,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    var p = inventory.find(function(p){ return p.id === pid; });
+    var p = inventory.find(function(p) { return p.id === pid; });
     if (!p) {
       prodLinkInfo.classList.add('empty');
       return;
@@ -882,24 +941,22 @@ document.addEventListener("DOMContentLoaded", function () {
       (qty > 0 ? '<div class="prod-link-info-row">Total: <strong>' + fmt(qty * p.price) + '</strong></div>' : '') +
       warn;
 
-    if (qty > 0) {
-      txAmount.value = (qty * p.price).toFixed(2);
-    }
+    if (qty > 0) txAmount.value = (qty * p.price).toFixed(2);
   }
 
-  txProductSelect.addEventListener('change', function(){
+  txProductSelect.addEventListener('change', function() {
     txProdQty.value = '';
     updateProdLinkInfo();
 
     if (txProductSelect.value && !txTitle.value.trim()) {
-      var p = inventory.find(function(p){ return p.id === txProductSelect.value; });
+      var p = inventory.find(function(p) { return p.id === txProductSelect.value; });
       if (p) txTitle.value = 'Sale: ' + p.name;
     }
   });
 
   txProdQty.addEventListener('input', updateProdLinkInfo);
 
-  saveBtn.addEventListener('click', function(){
+  saveBtn.addEventListener('click', function() {
     txTitleError.textContent = '';
     txAmtError.textContent = '';
     txProdQtyError.textContent = '';
@@ -925,7 +982,10 @@ document.addEventListener("DOMContentLoaded", function () {
         txProdQtyError.textContent = 'Enter quantity > 0.';
         valid = false;
       } else {
-        var lp = inventory.find(function(p){ return p.id === lid; });
+        var lp = inventory.find(function(p) {
+          return p.id === lid;
+        });
+
         if (lp && lqty > lp.qty) {
           txProdQtyError.textContent = 'Only ' + lp.qty + ' in stock.';
           valid = false;
@@ -938,7 +998,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var id = editIdInput.value;
 
     if (id) {
-      var i = transactions.findIndex(function(t){ return t.id === id; });
+      var i = transactions.findIndex(function(t) {
+        return t.id === id;
+      });
+
       if (i !== -1) {
         transactions[i].title = txTitle.value.trim();
         transactions[i].amount = amt;
@@ -963,7 +1026,10 @@ document.addEventListener("DOMContentLoaded", function () {
       transactions.push(newTx);
 
       if (lid) {
-        var pi = inventory.findIndex(function(p){ return p.id === lid; });
+        var pi = inventory.findIndex(function(p) {
+          return p.id === lid;
+        });
+
         if (pi !== -1) {
           inventory[pi].qty -= lqty;
           if (inventory[pi].qty < 0) inventory[pi].qty = 0;
@@ -988,8 +1054,8 @@ document.addEventListener("DOMContentLoaded", function () {
     refreshAll();
   });
 
-  function editTx(id){
-    var tx = transactions.find(function(t){ return t.id === id; });
+  function editTx(id) {
+    var tx = transactions.find(function(t) { return t.id === id; });
     if (!tx) return;
 
     editIdInput.value = tx.id;
@@ -1010,7 +1076,7 @@ document.addEventListener("DOMContentLoaded", function () {
     toast('Edit Mode', 'Editing "' + tx.title + '"', 'info', 2000);
   }
 
-  function exitTxEdit(){
+  function exitTxEdit() {
     editIdInput.value = '';
     formTitle.textContent = 'Add Transaction';
     saveBtn.textContent = 'Add Transaction';
@@ -1023,7 +1089,7 @@ document.addEventListener("DOMContentLoaded", function () {
     txAmtError.textContent = '';
   }
 
-  cancelBtn.addEventListener('click', function(){
+  cancelBtn.addEventListener('click', function() {
     if (editIdInput.value) {
       exitTxEdit();
     } else {
@@ -1041,8 +1107,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  function deleteTx(id){
-    var tx = transactions.find(function(t){ return t.id === id; });
+  function deleteTx(id) {
+    var tx = transactions.find(function(t) { return t.id === id; });
     var title = tx ? tx.title : 'Transaction';
 
     showConfirm(
@@ -1051,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '🗑️',
       'Yes, Delete',
       function() {
-        transactions = transactions.filter(function(t){ return t.id !== id; });
+        transactions = transactions.filter(function(t) { return t.id !== id; });
         saveTx();
         refreshAll();
         toast('Transaction Deleted', '"' + title + '" has been removed.', 'error', 3000);
@@ -1059,60 +1125,59 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  filterBtns.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      filterBtns.forEach(function(b){ b.classList.remove('active'); });
+  filterBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      filterBtns.forEach(function(b) { b.classList.remove('active'); });
       this.classList.add('active');
       activeFilter = this.dataset.filter;
       renderTable();
     });
   });
-
-  /* ══════════════════════════════════════════════════════════
+    /* ══════════════════════════════════════════════════════════
      INVENTORY
   ══════════════════════════════════════════════════════════ */
-  imgFileInput.addEventListener('change', function(){
+  imgFileInput.addEventListener('change', function() {
     if (this.files && this.files[0]) readImageFile(this.files[0]);
   });
 
-  imgUploadArea.addEventListener('dragover', function(e){
+  imgUploadArea.addEventListener('dragover', function(e) {
     e.preventDefault();
     imgUploadArea.classList.add('drag-over');
   });
 
-  imgUploadArea.addEventListener('dragleave', function(){
+  imgUploadArea.addEventListener('dragleave', function() {
     imgUploadArea.classList.remove('drag-over');
   });
 
-  imgUploadArea.addEventListener('drop', function(e){
+  imgUploadArea.addEventListener('drop', function(e) {
     e.preventDefault();
     imgUploadArea.classList.remove('drag-over');
     var f = e.dataTransfer.files[0];
     if (f && f.type.startsWith('image/')) readImageFile(f);
   });
 
-  function readImageFile(file){
+  function readImageFile(file) {
     if (file.size > 2 * 1024 * 1024) {
       toast('Image Too Large', 'Please use an image under 2MB.', 'error');
       return;
     }
 
     var r = new FileReader();
-    r.onload = function(e){
+    r.onload = function(e) {
       currentImgB64 = e.target.result;
       showImgPreview(currentImgB64);
     };
     r.readAsDataURL(file);
   }
 
-  function showImgPreview(src){
+  function showImgPreview(src) {
     imgPreview.src = src;
     imgPreview.classList.remove('hidden');
     imgPlaceholder.classList.add('hidden');
     removeImgBtn.classList.remove('hidden');
   }
 
-  function clearImgPreview(){
+  function clearImgPreview() {
     currentImgB64 = null;
     imgPreview.src = '';
     imgPreview.classList.add('hidden');
@@ -1123,14 +1188,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   removeImgBtn.addEventListener('click', clearImgPreview);
 
-  function renderInventory(){
+  function renderInventory() {
     invGrid.innerHTML = '';
 
-    var lowItems = inventory.filter(function(p){ return p.qty <= LOW_STOCK; });
+    var lowItems = inventory.filter(function(p) { return p.qty <= LOW_STOCK; });
 
     if (settings.lowStockAlert && lowItems.length) {
       lowStockBanner.classList.remove('hidden');
-      lowStockNames.textContent = lowItems.map(function(p){
+      lowStockNames.textContent = lowItems.map(function(p) {
         return p.name + ' (' + p.qty + ')';
       }).join(', ');
     } else {
@@ -1144,7 +1209,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     invEmpty.classList.add('hidden');
 
-    inventory.forEach(function(p){
+    inventory.forEach(function(p) {
       var isLow = p.qty <= LOW_STOCK;
       var card = document.createElement('div');
       card.className = 'product-card' + (isLow ? ' low-stock' : '');
@@ -1155,20 +1220,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
       card.innerHTML =
         imgHtml +
-        '<div class="product-body">' +
-          '<div class="product-name">' + esc(p.name) + '</div>' +
-          '<div class="product-desc">' + esc(p.desc || '') + '</div>' +
-          '<div class="product-meta">' +
-            '<div class="product-qty">Stock: <strong>' + p.qty + '</strong></div>' +
-            '<div class="product-price">' + fmt(p.price) + '/unit</div>' +
-          '</div>' +
-          (isLow && settings.lowStockAlert ? '<span class="low-stock-tag">⚠ Low Stock</span>' : '') +
-          '<div class="product-actions">' +
-            '<button class="btn-sell" onclick="AM.openSell(\'' + p.id + '\')" ' + (p.qty === 0 ? 'disabled' : '') + '>💰 Sell</button>' +
-            '<button class="btn-edit" onclick="AM.editProd(\'' + p.id + '\')">Edit</button>' +
-            '<button class="btn-delete" onclick="AM.deleteProd(\'' + p.id + '\')">Delete</button>' +
-          '</div>' +
-        '</div>';
+        '<div class="product-body"><div class="product-name">' + esc(p.name) + '</div><div class="product-desc">' + esc(p.desc || '') + '</div>' +
+        '<div class="product-meta"><div class="product-qty">Stock: <strong>' + p.qty + '</strong></div><div class="product-price">' + fmt(p.price) + '/unit</div></div>' +
+        (isLow && settings.lowStockAlert ? '<span class="low-stock-tag">⚠ Low Stock</span>' : '') +
+        '<div class="product-actions"><button class="btn-sell" onclick="AM.openSell(\'' + p.id + '\')" ' + (p.qty === 0 ? 'disabled' : '') + '>💰 Sell</button>' +
+        '<button class="btn-edit" onclick="AM.editProd(\'' + p.id + '\')">Edit</button><button class="btn-delete" onclick="AM.deleteProd(\'' + p.id + '\')">Delete</button></div></div>';
 
       invGrid.appendChild(card);
     });
@@ -1176,7 +1232,7 @@ document.addEventListener("DOMContentLoaded", function () {
     populateProductDropdown();
   }
 
-  invSaveBtn.addEventListener('click', function(){
+  invSaveBtn.addEventListener('click', function() {
     invNameError.textContent = '';
     invQtyError.textContent = '';
     invPriceError.textContent = '';
@@ -1206,7 +1262,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var id = invEditId.value;
 
     if (id) {
-      var i = inventory.findIndex(function(p){ return p.id === id; });
+      var i = inventory.findIndex(function(p) { return p.id === id; });
+
       if (i !== -1) {
         inventory[i].name = invName.value.trim();
         inventory[i].desc = invDesc.value.trim();
@@ -1234,8 +1291,9 @@ document.addEventListener("DOMContentLoaded", function () {
       invPrice.value = '';
       clearImgPreview();
       toast('Product Added', newProd.name + ' added to inventory.', 'success');
-            if(settings.lowStockAlert && qty<=LOW_STOCK && currentUser) {
-        sendLowStockEmail(settings.name||'there', currentUser.email, [{name:newProd.name,qty:qty}])
+
+      if (settings.lowStockAlert && qty <= LOW_STOCK && currentUser) {
+        sendLowStockEmail(settings.name || 'there', currentUser.email, [{name:newProd.name, qty:qty}])
           .then(function() {
             toast('Low Stock Alert', newProd.name + ' starts with low stock. Email alert sent.', 'warning', 4000);
           })
@@ -1250,9 +1308,9 @@ document.addEventListener("DOMContentLoaded", function () {
     renderInventory();
   });
 
-  function editProd(id){
-    var p = inventory.find(function(p){ return p.id===id; });
-    if(!p) return;
+  function editProd(id) {
+    var p = inventory.find(function(p) { return p.id === id; });
+    if (!p) return;
 
     invEditId.value = p.id;
     invName.value = p.name;
@@ -1263,7 +1321,7 @@ document.addEventListener("DOMContentLoaded", function () {
     invSaveBtn.textContent = 'Save Changes';
     invCancelBtn.classList.remove('hidden');
 
-    if(p.image){
+    if (p.image) {
       showImgPreview(p.image);
       currentImgB64 = null;
     } else {
@@ -1276,7 +1334,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  function exitInvEdit(){
+  function exitInvEdit() {
     invEditId.value = '';
     invFormTitle.textContent = 'Add Product';
     invSaveBtn.textContent = 'Add Product';
@@ -1293,8 +1351,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   invCancelBtn.addEventListener('click', exitInvEdit);
 
-  function deleteProd(id){
-    var p = inventory.find(function(p){ return p.id===id; });
+  function deleteProd(id) {
+    var p = inventory.find(function(p) { return p.id === id; });
     var name = p ? p.name : 'Product';
 
     showConfirm(
@@ -1303,7 +1361,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '📦',
       'Yes, Delete',
       function() {
-        inventory = inventory.filter(function(p){ return p.id!==id; });
+        inventory = inventory.filter(function(p) { return p.id !== id; });
         saveInv();
         renderInventory();
         toast('Product Deleted', '"' + name + '" removed from inventory.', 'error', 3000);
@@ -1311,9 +1369,9 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  function openSell(id){
-    var p = inventory.find(function(p){ return p.id===id; });
-    if(!p) return;
+  function openSell(id) {
+    var p = inventory.find(function(p) { return p.id === id; });
+    if (!p) return;
 
     sellTargetId = id;
     sellModalName.textContent = p.name + '  —  ' + fmt(p.price) + '/unit  (Stock: ' + p.qty + ')';
@@ -1324,24 +1382,25 @@ document.addEventListener("DOMContentLoaded", function () {
     sellQtyInput.focus();
   }
 
-  sellQtyInput.addEventListener('input', function(){
-    var p = inventory.find(function(p){ return p.id===sellTargetId; });
-    if(p) sellTotal.textContent = fmt((parseInt(this.value) || 0) * p.price);
+  sellQtyInput.addEventListener('input', function() {
+    var p = inventory.find(function(p) { return p.id === sellTargetId; });
+    if (p) sellTotal.textContent = fmt((parseInt(this.value) || 0) * p.price);
   });
 
-  sellConfirmBtn.addEventListener('click', function(){
+  sellConfirmBtn.addEventListener('click', function() {
     sellQtyError.textContent = '';
-    var p = inventory.find(function(p){ return p.id===sellTargetId; });
-    if(!p) return;
+
+    var p = inventory.find(function(p) { return p.id === sellTargetId; });
+    if (!p) return;
 
     var qty = parseInt(sellQtyInput.value);
 
-    if(!sellQtyInput.value || isNaN(qty) || qty <= 0){
+    if (!sellQtyInput.value || isNaN(qty) || qty <= 0) {
       sellQtyError.textContent = 'Enter qty > 0.';
       return;
     }
 
-    if(qty > p.qty){
+    if (qty > p.qty) {
       sellQtyError.textContent = 'Only ' + p.qty + ' in stock.';
       return;
     }
@@ -1366,7 +1425,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     toast('Sale Recorded! 💰', qty + 'x ' + p.name + ' — ' + fmt(total) + ' added as income.', 'success', 4000);
 
-    if(settings.lowStockAlert && p.qty <= LOW_STOCK && currentUser) {
+    if (settings.lowStockAlert && p.qty <= LOW_STOCK && currentUser) {
       sendLowStockEmail(settings.name || 'there', currentUser.email, [{name:p.name, qty:p.qty}])
         .then(function() {
           toast('Low Stock Alert', p.name + ' is now low (' + p.qty + ' left). Email sent.', 'warning', 4000);
@@ -1378,218 +1437,181 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  sellCancelBtn.addEventListener('click', function(){
+  sellCancelBtn.addEventListener('click', function() {
     sellModal.classList.add('hidden');
   });
 
-  sellModal.addEventListener('click', function(e){
-    if(e.target === sellModal) sellModal.classList.add('hidden');
+  sellModal.addEventListener('click', function(e) {
+    if (e.target === sellModal) sellModal.classList.add('hidden');
   });
 
- /* ══════════════════════════════════════════════════════════
-   SETTINGS
-══════════════════════════════════════════════════════════ */
-function applySettings() {
-  if (setCurrency) setCurrency.value = settings.currency;
-  if (setName) setName.value = settings.name;
-  if (setEmail) setEmail.value = settings.email;
-  if (setBusiness) setBusiness.value = settings.business;
-  if (toggleLowStock) toggleLowStock.checked = settings.lowStockAlert;
-  if (toggleExpWarn) toggleExpWarn.checked = settings.expenseWarn;
-  if (toggleDailyEmail) toggleDailyEmail.checked = settings.dailyEmail;
-  if (setThreshold) setThreshold.value = settings.lowStockThreshold || 5;
+  /* ══════════════════════════════════════════════════════════
+     SETTINGS
+  ══════════════════════════════════════════════════════════ */
+  saveProfileBtn.addEventListener('click', function() {
+    if (!currentUser) return;
 
-  LOW_STOCK = settings.lowStockThreshold || 5;
+    settings.name = setName.value.trim();
+    settings.business = setBusiness.value.trim();
 
-  currencyLabels.forEach(function(el) {
-    el.textContent = settings.currency;
+    db.collection('users').doc(currentUser.uid).update({
+      name: settings.name,
+      business: settings.business
+    })
+    .then(function() {
+      if (profileSaved) {
+        profileSaved.classList.remove('hidden');
+        setTimeout(function() {
+          profileSaved.classList.add('hidden');
+        }, 2500);
+      }
+      updateTopbar();
+      toast('Profile Saved', 'Your profile has been updated.', 'success');
+    })
+    .catch(function(err) {
+      toast('Save Failed', err.message, 'error');
+    });
   });
-}
 
-function updateTopbar() {
-  if (!currentUser) return;
+  saveCurrencyBtn.addEventListener('click', function() {
+    settings.currency = setCurrency.value;
+    currencyLabels.forEach(function(el) {
+      el.textContent = settings.currency;
+    });
 
-  var displayName = settings.name || currentUser.email.split('@')[0];
+    refreshAll();
 
-  if (topbarName) topbarName.textContent = displayName;
-  if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
-  if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
-}
-
-saveProfileBtn.addEventListener('click', function() {
-  if (!currentUser) return;
-
-  settings.name = setName.value.trim();
-  settings.business = setBusiness.value.trim();
-
-  db.collection('users').doc(currentUser.uid).update({
-    name: settings.name,
-    business: settings.business
-  })
-  .then(function() {
-    if (profileSaved) {
-      profileSaved.classList.remove('hidden');
+    if (currencySaved) {
+      currencySaved.classList.remove('hidden');
       setTimeout(function() {
-        profileSaved.classList.add('hidden');
+        currencySaved.classList.add('hidden');
       }, 2500);
     }
-    updateTopbar();
-    toast('Profile Saved', 'Your profile has been updated.', 'success');
-  })
-  .catch(function(err) {
-    toast('Save Failed', err.message, 'error');
-  });
-});
 
-saveCurrencyBtn.addEventListener('click', function() {
-  settings.currency = setCurrency.value;
-  currencyLabels.forEach(function(el) {
-    el.textContent = settings.currency;
-  });
-  refreshAll();
+    toast('Currency Updated', 'All amounts now show in ' + settings.currency, 'success');
 
-  if (currencySaved) {
-    currencySaved.classList.remove('hidden');
-    setTimeout(function() {
-      currencySaved.classList.add('hidden');
-    }, 2500);
-  }
-
-  toast('Currency Updated', 'All amounts now show in ' + settings.currency, 'success');
-
-  if (currentUser) {
-    db.collection('users').doc(currentUser.uid).update({
-      currency: settings.currency
-    });
-  }
-});
-
-toggleLowStock.addEventListener('change', function() {
-  settings.lowStockAlert = this.checked;
-  renderInventory();
-
-  toast(
-    this.checked ? 'Low Stock Alerts ON' : 'Low Stock Alerts OFF',
-    this.checked ? 'You will be notified when stock is low.' : 'Low stock alerts are now disabled.',
-    this.checked ? 'success' : 'info'
-  );
-
-  if (currentUser) {
-    db.collection('users').doc(currentUser.uid).update({
-      lowStockAlert: settings.lowStockAlert
-    });
-  }
-});
-
-toggleExpWarn.addEventListener('change', function() {
-  settings.expenseWarn = this.checked;
-  updateDashboard();
-
-  toast(
-    this.checked ? 'Expense Warning ON' : 'Expense Warning OFF',
-    '',
-    this.checked ? 'success' : 'info',
-    2000
-  );
-
-  if (currentUser) {
-    db.collection('users').doc(currentUser.uid).update({
-      expenseWarn: settings.expenseWarn
-    });
-  }
-});
-
-saveThresholdBtn.addEventListener('click', function() {
-  var val = parseInt(setThreshold.value);
-
-  if (isNaN(val) || val < 1) {
-    toast('Invalid Threshold', 'Please enter a number greater than 0.', 'error');
-    return;
-  }
-
-  settings.lowStockThreshold = val;
-  LOW_STOCK = val;
-  renderInventory();
-  toast('Threshold Updated', 'Low stock alerts will trigger at ' + val + ' or fewer units.', 'success');
-
-  if (currentUser) {
-    db.collection('users').doc(currentUser.uid).update({
-      lowStockThreshold: val
-    });
-  }
-});
-
-toggleDailyEmail.addEventListener('change', function() {
-  settings.dailyEmail = this.checked;
-
-  toast(
-    this.checked ? 'Daily Emails ON' : 'Daily Emails OFF',
-    this.checked ? 'You will receive a daily summary email.' : 'Daily summary emails are disabled.',
-    this.checked ? 'success' : 'info'
-  );
-
-  if (currentUser) {
-    db.collection('users').doc(currentUser.uid).update({
-      dailyEmail: settings.dailyEmail
-    });
-  }
-});
-
-resetDataBtn.addEventListener('click', function() {
-  showConfirm(
-    '⚠️ Reset All Data',
-    'This will permanently delete ALL transactions and inventory. This cannot be undone.',
-    '🗑️',
-    'Yes, Reset Everything',
-    function() {
-      transactions = [];
-      inventory = [];
-      localStorage.removeItem(txKey());
-      localStorage.removeItem(invKey());
-      refreshAll();
-      toast('All Data Reset', 'All transactions and inventory have been cleared.', 'warning', 4000);
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid).update({
+        currency: settings.currency
+      });
     }
-  );
-});
-function showSection(name){
-  document.querySelectorAll('.section').forEach(function(s){
-    s.classList.remove('active');
   });
 
-  var t = document.getElementById('section-' + name);
-  if (t) t.classList.add('active');
+  toggleLowStock.addEventListener('change', function() {
+    settings.lowStockAlert = this.checked;
+    renderInventory();
 
-  navItems.forEach(function(n){
-    n.classList.toggle('active', n.dataset.section === name);
+    toast(
+      this.checked ? 'Low Stock Alerts ON' : 'Low Stock Alerts OFF',
+      this.checked ? 'You will be notified when stock is low.' : 'Low stock alerts are now disabled.',
+      this.checked ? 'success' : 'info'
+    );
+
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid).update({
+        lowStockAlert: settings.lowStockAlert
+      });
+    }
   });
 
-  topbarTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-}
+  toggleExpWarn.addEventListener('change', function() {
+    settings.expenseWarn = this.checked;
+    updateDashboard();
 
-navItems.forEach(function(item){
-  item.addEventListener('click', function(e){
-    e.preventDefault();
-    showSection(item.dataset.section);
+    toast(
+      this.checked ? 'Expense Warning ON' : 'Expense Warning OFF',
+      '',
+      this.checked ? 'success' : 'info',
+      2000
+    );
+
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid).update({
+        expenseWarn: settings.expenseWarn
+      });
+    }
   });
-});
 
-function showApp(user) {
-  hideLoading();
-  if (loginPage) loginPage.classList.add('hidden');
-  if (app) app.classList.remove('hidden');
-  applySettings();
-  updateTopbar();
-  refreshAll();
-  showSection('dashboard');
-  checkDailySummaryEmail();
-}
+  saveThresholdBtn.addEventListener('click', function() {
+    var val = parseInt(setThreshold.value);
 
-window.AM = {
-  editTx: editTx,
-  deleteTx: deleteTx,
-  editProd: editProd,
-  deleteProd: deleteProd,
-  openSell: openSell
-};
+    if (isNaN(val) || val < 1) {
+      toast('Invalid Threshold', 'Please enter a number greater than 0.', 'error');
+      return;
+    }
 
+    settings.lowStockThreshold = val;
+    LOW_STOCK = val;
+    renderInventory();
+    toast('Threshold Updated', 'Low stock alerts will trigger at ' + val + ' or fewer units.', 'success');
+
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid).update({
+        lowStockThreshold: val
+      });
+    }
+  });
+
+  toggleDailyEmail.addEventListener('change', function() {
+    settings.dailyEmail = this.checked;
+
+    toast(
+      this.checked ? 'Daily Emails ON' : 'Daily Emails OFF',
+      this.checked ? 'You will receive a daily summary email.' : 'Daily summary emails are disabled.',
+      this.checked ? 'success' : 'info'
+    );
+
+    if (currentUser) {
+      db.collection('users').doc(currentUser.uid).update({
+        dailyEmail: settings.dailyEmail
+      });
+    }
+  });
+
+  resetDataBtn.addEventListener('click', function() {
+    showConfirm(
+      '⚠️ Reset All Data',
+      'This will permanently delete ALL transactions and inventory. This cannot be undone.',
+      '🗑️',
+      'Yes, Reset Everything',
+      function() {
+        transactions = [];
+        inventory = [];
+        localStorage.removeItem(txKey());
+        localStorage.removeItem(invKey());
+        refreshAll();
+        toast('All Data Reset', 'All transactions and inventory have been cleared.', 'warning', 4000);
+      }
+    );
+  });
+
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(function(s) {
+      s.classList.remove('active');
+    });
+
+    var t = document.getElementById('section-' + name);
+    if (t) t.classList.add('active');
+
+    navItems.forEach(function(n) {
+      n.classList.toggle('active', n.dataset.section === name);
+    });
+
+    topbarTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      showSection(item.dataset.section);
+    });
+  });
+
+  window.AM = {
+    editTx: editTx,
+    deleteTx: deleteTx,
+    editProd: editProd,
+    deleteProd: deleteProd,
+    openSell: openSell
+  };
 });
