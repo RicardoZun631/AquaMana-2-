@@ -920,18 +920,20 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function populateProductDropdown() {
-    if (!txProductSelect) return;
+  var cur = txProductSelect.value;
+  txProductSelect.innerHTML = '<option value="">— None —</option>';
 
-    var cur = txProductSelect.value;
-    txProductSelect.innerHTML = '<option value="">— None —</option>';
+  inventory.forEach(function (p) {
+    var opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
+    if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
+    txProductSelect.appendChild(opt);
+  });
 
-    inventory.forEach(function (p) {
-      var opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
-      if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
-      txProductSelect.appendChild(opt);
-    });
+  txProductSelect.value = cur;
+  updateProdLinkInfo();
+}
 
     txProductSelect.value = cur;
     updateProdLinkInfo();
