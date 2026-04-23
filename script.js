@@ -189,6 +189,7 @@ function sendExpenseWarningEmail(name, email, balance, income, expenses) {
 
   return sendEmail(email, '🚨 AguaMana Expense Warning', msg);
 }
+
 /* ══════════════════════════════════════════════════════════════
    MAIN APP LOGIC
 ══════════════════════════════════════════════════════════════ */
@@ -241,10 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var monthlyPrevBtn  = document.getElementById('monthly-prev-btn');
   var monthlyNextBtn  = document.getElementById('monthly-next-btn');
   var monthlyPageInfo = document.getElementById('monthly-page-info');
-  var txPagBar        = document.getElementById('tx-pagination');
-  var txPrevBtn       = document.getElementById('tx-prev-btn');
-  var txNextBtn       = document.getElementById('tx-next-btn');
-  var txPageInfo      = document.getElementById('tx-page-info');
 
   var formTitle      = document.getElementById('form-title');
   var editIdInput    = document.getElementById('edit-id');
@@ -322,8 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var LOW_STOCK     = 5;
   var currentUser   = null;
   var expWarnEmailSentToday = false;
-  var ITEMS_PER_PAGE     = 20;
-  var txCurrentPage      = 1;
+  var ITEMS_PER_PAGE     = 50;
   var monthlyCurrentPage = 1;
   var monthlySearchQuery = '';
   var currentMonthTxs    = [];
@@ -399,6 +395,33 @@ document.addEventListener('DOMContentLoaded', function () {
     if (topbarName) topbarName.textContent = displayName;
     if (topbarEmailSub) topbarEmailSub.textContent = currentUser.email;
     if (topbarAvatar) topbarAvatar.textContent = displayName.charAt(0).toUpperCase();
+  }
+
+  function restoreLinkedStock(tx) {
+    if (!tx || !tx.linkedProductId || !tx.linkedQty) return;
+
+    var p = inventory.find(function(item) {
+      return item.id === tx.linkedProductId;
+    });
+
+    if (p) {
+      p.qty += Number(tx.linkedQty);
+    }
+  }
+
+  function applyLinkedStock(productId, qty) {
+    if (!productId || !qty) return true;
+
+    var p = inventory.find(function(item) {
+      return item.id === productId;
+    });
+
+    if (!p) return false;
+    if (Number(qty) > p.qty) return false;
+
+    p.qty -= Number(qty);
+    if (p.qty < 0) p.qty = 0;
+    return true;
   }
 
   tabSignin.addEventListener('click', function() {
@@ -620,7 +643,8 @@ document.addEventListener('DOMContentLoaded', function () {
       console.error('Daily summary failed:', err);
     });
   }
-    /* ══════════════════════════════════════════════════════════
+
+  /* ══════════════════════════════════════════════════════════
      DASHBOARD
   ══════════════════════════════════════════════════════════ */
   function updateDashboard() {
@@ -673,8 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     buildMonthDropdown();
   }
-
-  function buildMonthDropdown() {
+    function buildMonthDropdown() {
     var current = monthSelect.value;
     var months = {};
 
@@ -835,12 +858,12 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   function refreshAll() {
-    txCurrentPage = 1;
     updateDashboard();
     renderTable();
     renderInventory();
   }
-    /* ══════════════════════════════════════════════════════════
+
+  /* ══════════════════════════════════════════════════════════
      TRANSACTIONS
   ══════════════════════════════════════════════════════════ */
   function renderTable() {
@@ -900,7 +923,7 @@ document.addEventListener('DOMContentLoaded', function () {
     inventory.forEach(function(p) {
       var opt = document.createElement("option");
       opt.value = p.id;
-      opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
+      opt.textContent = p.name + ' (Stock: ' + p.qty + ' @ ' + fmt(p.price) + ')';
       if (p.qty === 0) opt.textContent += " — OUT OF STOCK";
       txProductSelect.appendChild(opt);
     });
@@ -974,22 +997,13 @@ document.addEventListener('DOMContentLoaded', function () {
       valid = false;
     }
 
-    var lid = txProductSelect.value;
-    var lqty = parseInt(txProdQty.value);
+    var newLinkedProductId = txProductSelect.value || null;
+    var newLinkedQty = newLinkedProductId ? parseInt(txProdQty.value) : null;
 
-    if (lid) {
-      if (!txProdQty.value || isNaN(lqty) || lqty <= 0) {
+    if (newLinkedProductId) {
+      if (!txProdQty.value || isNaN(newLinkedQty) || newLinkedQty <= 0) {
         txProdQtyError.textContent = 'Enter quantity > 0.';
         valid = false;
-      } else {
-        var lp = inventory.find(function(p) {
-          return p.id === lid;
-        });
-
-        if (lp && lqty > lp.qty) {
-          txProdQtyError.textContent = 'Only ' + lp.qty + ' in stock.';
-          valid = false;
-        }
       }
     }
 
@@ -1002,16 +1016,44 @@ document.addEventListener('DOMContentLoaded', function () {
         return t.id === id;
       });
 
-      if (i !== -1) {
-        transactions[i].title = txTitle.value.trim();
-        transactions[i].amount = amt;
-        transactions[i].type = txType.value;
-        transactions[i].note = txNote.value.trim();
+      if (i === -1) return;
+
+      var oldTx = transactions[i];
+
+      restoreLinkedStock(oldTx);
+
+      if (newLinkedProductId) {
+        var applied = applyLinkedStock(newLinkedProductId, newLinkedQty);
+        if (!applied) {
+          applyLinkedStock(oldTx.linkedProductId, oldTx.linkedQty);
+          txProdQtyError.textContent = 'Not enough stock for the selected product.';
+          renderInventory();
+          return;
+        }
       }
 
+      transactions[i].title = txTitle.value.trim();
+      transactions[i].amount = amt;
+      transactions[i].type = txType.value;
+      transactions[i].note = txNote.value.trim();
+      transactions[i].linkedProductId = newLinkedProductId;
+      transactions[i].linkedQty = newLinkedProductId ? newLinkedQty : null;
+
+      saveInv();
+      saveTx();
       exitTxEdit();
+      refreshAll();
       toast('Transaction Updated', txTitle.value.trim() + ' has been updated.', 'success');
     } else {
+      if (newLinkedProductId) {
+        var appliedNew = applyLinkedStock(newLinkedProductId, newLinkedQty);
+        if (!appliedNew) {
+          txProdQtyError.textContent = 'Not enough stock for the selected product.';
+          renderInventory();
+          return;
+        }
+      }
+
       var newTx = {
         id: genId(),
         title: txTitle.value.trim(),
@@ -1019,23 +1061,11 @@ document.addEventListener('DOMContentLoaded', function () {
         type: txType.value,
         note: txNote.value.trim(),
         date: new Date().toISOString(),
-        linkedProductId: lid || null,
-        linkedQty: lid ? lqty : null
+        linkedProductId: newLinkedProductId,
+        linkedQty: newLinkedProductId ? newLinkedQty : null
       };
 
       transactions.push(newTx);
-
-      if (lid) {
-        var pi = inventory.findIndex(function(p) {
-          return p.id === lid;
-        });
-
-        if (pi !== -1) {
-          inventory[pi].qty -= lqty;
-          if (inventory[pi].qty < 0) inventory[pi].qty = 0;
-          saveInv();
-        }
-      }
 
       txTitle.value = '';
       txAmount.value = '';
@@ -1046,12 +1076,13 @@ document.addEventListener('DOMContentLoaded', function () {
       prodLinkInfo.classList.add('empty');
       prodLinkInfo.innerHTML = '';
 
+      saveInv();
+      saveTx();
+      refreshAll();
+
       var typeLabel = newTx.type === 'income' ? '💰 Income' : '💸 Expense';
       toast(typeLabel + ' Added', newTx.title + ' — ' + fmt(newTx.amount), 'success');
     }
-
-    saveTx();
-    refreshAll();
   });
 
   function editTx(id) {
@@ -1063,10 +1094,14 @@ document.addEventListener('DOMContentLoaded', function () {
     txAmount.value = tx.amount;
     txType.value = tx.type;
     txNote.value = tx.note || '';
+    txProductSelect.value = tx.linkedProductId || '';
+    txProdQty.value = tx.linkedQty || '';
 
     formTitle.textContent = 'Edit Transaction';
     saveBtn.textContent = 'Save Changes';
     cancelBtn.textContent = 'Cancel Edit';
+
+    updateProdLinkInfo();
 
     document.querySelector('#section-transactions .form-card').scrollIntoView({
       behavior:'smooth',
@@ -1085,8 +1120,13 @@ document.addEventListener('DOMContentLoaded', function () {
     txAmount.value = '';
     txType.value = 'income';
     txNote.value = '';
+    txProductSelect.value = '';
+    txProdQty.value = '';
+    prodLinkInfo.classList.add('empty');
+    prodLinkInfo.innerHTML = '';
     txTitleError.textContent = '';
     txAmtError.textContent = '';
+    txProdQtyError.textContent = '';
   }
 
   cancelBtn.addEventListener('click', function() {
@@ -1117,13 +1157,26 @@ document.addEventListener('DOMContentLoaded', function () {
       '🗑️',
       'Yes, Delete',
       function() {
-        transactions = transactions.filter(function(t) { return t.id !== id; });
+        if (tx && tx.linkedProductId && tx.linkedQty) {
+          restoreLinkedStock(tx);
+          saveInv();
+        }
+
+        transactions = transactions.filter(function(t) {
+          return t.id !== id;
+        });
+
         saveTx();
         refreshAll();
         toast('Transaction Deleted', '"' + title + '" has been removed.', 'error', 3000);
       }
     );
   }
+
+  searchInput.addEventListener('input', function() {
+    searchQuery = this.value;
+    renderTable();
+  });
 
   filterBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -1415,7 +1468,9 @@ document.addEventListener('DOMContentLoaded', function () {
       amount: total,
       type: 'income',
       note: 'Sold from Inventory',
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      linkedProductId: p.id,
+      linkedQty: qty
     });
 
     saveTx();
