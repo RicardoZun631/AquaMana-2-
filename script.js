@@ -323,6 +323,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var monthlyCurrentPage = 1;
   var monthlySearchQuery = '';
   var currentMonthTxs    = [];
+  var importTransactionsFile = document.getElementById('import-transactions-file');
+  var importTransactionsBtn  = document.getElementById('import-transactions-btn');
 
   var settings = {
     name:          '',
@@ -539,7 +541,152 @@ document.addEventListener('DOMContentLoaded', function () {
         registerError.classList.remove('hidden');
       });
   });
+      function normalizeImportedRow(row) {
+  var normalized = {};
 
+  Object.keys(row).forEach(function(key) {
+    normalized[String(key).trim().toLowerCase()] = row[key];
+  });
+
+  return normalized;
+}
+
+function buildImportedTransaction(row) {
+  var title = row.title != null ? String(row.title).trim() : '';
+  var amount = parseFloat(row.amount);
+  var type = row.type != null ? String(row.type).trim().toLowerCase() : '';
+  var note = row.note != null ? String(row.note).trim() : '';
+  var rawDate = row.date != null ? String(row.date).trim() : '';
+
+  if (!title) return null;
+  if (isNaN(amount) || amount <= 0) return null;
+  if (type !== 'income' && type !== 'expense') return null;
+
+  var isoDate = new Date().toISOString();
+
+  if (rawDate) {
+    var parsed = new Date(rawDate);
+    if (!isNaN(parsed.getTime())) {
+      isoDate = parsed.toISOString();
+    }
+  }
+
+  return {
+    id: genId(),
+    title: title,
+    amount: amount,
+    type: type,
+    note: note,
+    date: isoDate,
+    linkedProductId: null,
+    linkedQty: null
+  };
+}
+if (importTransactionsBtn) {
+  importTransactionsBtn.addEventListener('click', function() {
+    if (!importTransactionsFile || !importTransactionsFile.files.length) {
+      toast('No File Selected', 'Please choose a CSV or Excel file first.', 'error');
+      return;
+    }
+
+    var file = importTransactionsFile.files[0];
+    var fileName = file.name.toLowerCase();
+
+    if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
+      toast('Invalid File', 'Please upload a .csv or .xlsx file.', 'error');
+      return;
+    }
+
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+      try {
+        var importedRows = [];
+
+        if (fileName.endsWith('.csv')) {
+          importedRows = parseCSVText(e.target.result);
+        } else if (fileName.endsWith('.xlsx')) {
+          var data = new Uint8Array(e.target.result);
+          var workbook = XLSX.read(data, { type: 'array' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          importedRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        }
+
+        if (!importedRows.length) {
+          toast('No Data Found', 'The file does not contain any rows to import.', 'warning');
+          return;
+        }
+
+        var added = 0;
+        var skipped = 0;
+
+        importedRows.forEach(function(rawRow) {
+          var row = normalizeImportedRow(rawRow);
+          var tx = buildImportedTransaction(row);
+
+          if (tx) {
+            transactions.push(tx);
+            added++;
+          } else {
+            skipped++;
+          }
+        });
+
+        if (!added) {
+          toast('Import Failed', 'No valid transactions were found in the file.', 'error');
+          return;
+        }
+
+        saveTx();
+        refreshAll();
+        importTransactionsFile.value = '';
+
+        if (skipped > 0) {
+          toast('Import Complete', added + ' imported, ' + skipped + ' skipped.', 'warning', 5000);
+        } else {
+          toast('Import Complete', added + ' transactions imported successfully.', 'success', 4000);
+        }
+      } catch (err) {
+        console.error('Import error:', err);
+        toast('Import Failed', 'Could not read the file.', 'error', 5000);
+      }
+    };
+
+    if (fileName.endsWith('.csv')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
+  });
+}
+
+function parseCSVText(text) {
+  var lines = text.split(/\r?\n/).filter(function(line) {
+    return line.trim() !== '';
+  });
+
+  if (!lines.length) return [];
+
+  var headers = lines[0].split(',').map(function(h) {
+    return h.trim().toLowerCase();
+  });
+
+  var rows = [];
+
+  for (var i = 1; i < lines.length; i++) {
+    var values = lines[i].split(',');
+    var row = {};
+
+    headers.forEach(function(header, index) {
+      row[header] = values[index] != null ? values[index].trim() : '';
+    });
+
+    rows.push(row);
+  }
+
+  return rows;
+}
   auth.onAuthStateChanged(function(user) {
     if (user) {
       currentUser = user;
