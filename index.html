@@ -433,18 +433,30 @@
         </div>
 
         <div class="settings-card">
-          <div class="settings-card-title"><span>🗄️</span> Data Management</div>
-          <div class="data-actions">
-            <div class="data-action-row">
-              <div class="data-action-info">
-                <div class="data-action-label">Reset All Data</div>
-                <div class="data-action-desc">Permanently delete all transactions and inventory. Cannot be undone.</div>
-              </div>
-              <button class="btn-danger" id="reset-data-btn">🗑️ Reset All Data</button>
-            </div>
-          </div>
+  <div class="settings-card-title"><span>🗄️</span> Data Management</div>
+  <div class="data-actions">
+
+    <div class="data-action-row">
+      <div class="data-action-info">
+        <div class="data-action-label">Import Transactions</div>
+        <div class="data-action-desc">
+          Upload a CSV or Excel file with columns: title, amount, type, note, date.
         </div>
-      </section>
+        <input type="file" id="import-transactions-file" accept=".csv,.xlsx" />
+      </div>
+      <button class="btn-primary" id="import-transactions-btn">Import Transactions</button>
+    </div>
+
+    <div class="data-action-row">
+      <div class="data-action-info">
+        <div class="data-action-label">Reset All Data</div>
+        <div class="data-action-desc">Permanently delete all transactions and inventory. Cannot be undone.</div>
+      </div>
+      <button class="btn-danger" id="reset-data-btn">🗑️ Reset All Data</button>
+    </div>
+
+  </div>
+</div>
 
     </main>
   </div>
