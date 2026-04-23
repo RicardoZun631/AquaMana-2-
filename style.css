@@ -438,3 +438,5 @@ input, select, button, textarea { font-family:inherit; font-size:inherit; }
   transition: border-color .2s;
 }
 .monthly-search-input:focus { border-color: var(--accent); background: #fff; }
+
+
