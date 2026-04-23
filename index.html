@@ -18,6 +18,7 @@
 <body>
 
   <!-- ── TOAST NOTIFICATION CONTAINER ──────────────────────── -->
+  <!-- Toasts are injected here by JavaScript -->
   <div id="toast-container" class="toast-container"></div>
 
   <!-- ── LOGIN PAGE ─────────────────────────────────────────── -->
@@ -28,11 +29,13 @@
         <h1 class="brand-name">AguaMana</h1>
       </div>
 
+      <!-- Tab switcher -->
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-signin">Sign In</button>
         <button class="auth-tab" id="tab-register">Create Account</button>
       </div>
 
+      <!-- Sign In Form -->
       <div id="signin-form">
         <div class="form-group">
           <label for="email">Email Address</label>
@@ -48,6 +51,7 @@
         <button class="btn-primary btn-full" id="login-btn">Sign In</button>
       </div>
 
+      <!-- Register Form -->
       <div id="register-form" class="hidden">
         <div class="form-group">
           <label for="reg-name">Full Name</label>
@@ -72,6 +76,7 @@
         <button class="btn-primary btn-full" id="register-btn">Create Account</button>
       </div>
 
+      <!-- Loading spinner -->
       <div class="auth-loading hidden" id="auth-loading">
         <div class="spinner"></div>
         <span>Please wait...</span>
@@ -82,6 +87,7 @@
   <!-- ── MAIN APP ────────────────────────────────────────────── -->
   <div id="app" class="app hidden">
 
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <span>💧</span>
@@ -106,10 +112,12 @@
       </div>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="main-content">
 
       <header class="topbar">
         <div id="topbar-title" class="topbar-title">Dashboard</div>
+        <!-- Shows user's NAME (not email) after login -->
         <div class="topbar-user">
           <span id="topbar-avatar" class="user-avatar-circle">?</span>
           <div class="topbar-user-info">
@@ -145,6 +153,7 @@
           </div>
         </div>
 
+        <!-- Monthly Summary -->
         <div class="monthly-summary-card">
           <div class="monthly-header">
             <h3 class="subsection-heading" style="margin-bottom:0;">Monthly Summary</h3>
@@ -330,6 +339,7 @@
         <div id="inv-grid" class="inv-grid"></div>
         <div id="inv-empty" class="empty-state hidden">No products yet.</div>
 
+        <!-- Sell Modal -->
         <div id="sell-modal" class="modal-overlay hidden">
           <div class="modal-box">
             <h3 class="modal-title">Sell Product</h3>
@@ -348,18 +358,19 @@
         </div>
       </section>
 
-      <!-- ── SETTINGS ───────────────────────────────────────── -->
       <section id="section-settings" class="section">
-        <h2 class="section-heading">Settings</h2>
-        <div class="settings-card">
-          <div class="settings-card-title"><span>👤</span> User Profile</div>
+  <h2 class="section-heading">Settings</h2>
+
+  <!-- User Profile -->
+  <div class="settings-card">
+    <div class="settings-card-title"><span>👤</span> User Profile</div>
           <div class="settings-grid">
             <div class="form-group">
               <label>Full Name</label>
               <input type="text" id="set-name" placeholder="Your name..." />
             </div>
             <div class="form-group">
-              <label>Email <span style="color:var(--light);font-weight:400;"></span></label>
+              <label>Email <span style="color:var(--light);font-weight:400;">(from Firebase)</span></label>
               <input type="email" id="set-email" disabled />
             </div>
             <div class="form-group">
@@ -367,10 +378,11 @@
               <input type="text" id="set-business" placeholder="Your business name..." />
             </div>
           </div>
-          <button class="btn-primary" id="save-profile-btn">Save</button>
+          <button class="btn-primary" id="save-profile-btn">Save to Firebase</button>
           <span class="save-confirm hidden" id="profile-saved">✅ Saved!</span>
         </div>
 
+        <!-- Currency -->
         <div class="settings-card">
           <div class="settings-card-title"><span>💱</span> Currency</div>
           <div class="form-group" style="max-width:280px;">
@@ -378,13 +390,14 @@
             <select id="set-currency">
               <option value="$">USD — $ (US Dollar)</option>
               <option value="€">EUR — € (Euro)</option>
-              <option value="L">HNL — L (Lempira)</option>
+              <option value="L">HNL — L (Lempira 👀)</option>
             </select>
           </div>
           <button class="btn-primary" id="save-currency-btn">Apply Currency</button>
           <span class="save-confirm hidden" id="currency-saved">✅ Applied!</span>
         </div>
 
+        <!-- Notifications -->
         <div class="settings-card">
           <div class="settings-card-title"><span>🔔</span> Notifications & Alerts</div>
           <div class="toggle-list">
@@ -408,6 +421,7 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
+            <!-- Low Stock Threshold -->
             <div class="toggle-row">
               <div class="toggle-info">
                 <div class="toggle-label">Low Stock Threshold</div>
@@ -432,6 +446,17 @@
           </div>
         </div>
 
+        <!-- Email Test -->
+        <div class="settings-card">
+          <div class="settings-card-title"><span>📧</span> Email Test</div>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;">
+            Send a test email to verify your EmailJS setup is working correctly.
+          </p>
+          <button class="btn-primary" id="test-email-btn">Send Test Email</button>
+          <span class="save-confirm hidden" id="email-test-sent">📨 Sent! Check your inbox.</span>
+        </div>
+
+        <!-- Data Management -->
         <div class="settings-card">
           <div class="settings-card-title"><span>🗄️</span> Data Management</div>
           <div class="data-actions">
@@ -450,7 +475,7 @@
   </div>
 
 
-  <!-- ── CUSTOM CONFIRM MODAL  ── -->
+  <!-- ── CUSTOM CONFIRM MODAL (replaces browser confirm()) ── -->
   <div id="confirm-modal" class="modal-overlay hidden">
     <div class="modal-box confirm-box">
       <div class="confirm-icon" id="confirm-icon">🗑️</div>
@@ -465,4 +490,6 @@
 
   <script src="script.js"></script>
 </body>
+</html>
+
 </html>
