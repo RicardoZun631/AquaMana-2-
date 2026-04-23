@@ -758,7 +758,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var cur=txProductSelect.value; txProductSelect.innerHTML='<option value="">— None —</option>';
     inventory.forEach(function(p){
       var opt=document.createElement('option'); opt.value=p.id;
-      opt.textContent=p.name+' (Stock: '+p.qty+' @ '+fmt(p.price)+')';
+      opt.textContent=p.name+' (Stock: '+p.qty+' at '+fmt(p.price)+')';
       if(p.qty===0)opt.textContent+=' — OUT OF STOCK'; txProductSelect.appendChild(opt);
     });
     txProductSelect.value=cur; updateProdLinkInfo();
