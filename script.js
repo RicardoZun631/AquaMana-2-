@@ -374,6 +374,32 @@ document.addEventListener('DOMContentLoaded', function () {
     [signinError, registerError].forEach(function(el) { el.classList.add('hidden'); el.textContent = ''; });
     [emailError, passwordError, regNameError, regEmailError, regPwError].forEach(function(el) { el.textContent = ''; });
   }
+  function restoreLinkedStock(tx) {
+  if (!tx || !tx.linkedProductId || !tx.linkedQty) return;
+
+  var p = inventory.find(function(item) {
+    return item.id === tx.linkedProductId;
+  });
+
+  if (p) {
+    p.qty += Number(tx.linkedQty);
+  }
+}
+
+function applyLinkedStock(productId, qty) {
+  if (!productId || !qty) return true;
+
+  var p = inventory.find(function(item) {
+    return item.id === productId;
+  });
+
+  if (!p) return false;
+  if (Number(qty) > p.qty) return false;
+
+  p.qty -= Number(qty);
+  if (p.qty < 0) p.qty = 0;
+  return true;
+}
 
   /* ── UPDATE TOPBAR with user's NAME ─────────────────────── */
   function updateTopbar() {
@@ -758,7 +784,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var cur=txProductSelect.value; txProductSelect.innerHTML='<option value="">— None —</option>';
     inventory.forEach(function(p){
       var opt=document.createElement('option'); opt.value=p.id;
-      opt.textContent=p.name+' (Stock: '+p.qty+' at '+fmt(p.price)+')';
+      opt.textContent = p.name + ' (Stock: ' + p.qty + ' at ' + fmt(p.price) + ')';
       if(p.qty===0)opt.textContent+=' — OUT OF STOCK'; txProductSelect.appendChild(opt);
     });
     txProductSelect.value=cur; updateProdLinkInfo();
@@ -778,71 +804,203 @@ document.addEventListener('DOMContentLoaded', function () {
   txProductSelect.addEventListener('change',function(){txProdQty.value='';updateProdLinkInfo();if(txProductSelect.value&&!txTitle.value.trim()){var p=inventory.find(function(p){return p.id===txProductSelect.value;});if(p)txTitle.value='Sale: '+p.name;}});
   txProdQty.addEventListener('input',updateProdLinkInfo);
 
-  saveBtn.addEventListener('click',function(){
-    txTitleError.textContent='';txAmtError.textContent='';txProdQtyError.textContent='';
-    var valid=true;
-    if(!txTitle.value.trim()){txTitleError.textContent='Title required.';valid=false;}
-    var amt=parseFloat(txAmount.value);
-    if(!txAmount.value||isNaN(amt)||amt<=0){txAmtError.textContent='Enter amount > 0.';valid=false;}
-    var lid=txProductSelect.value, lqty=parseInt(txProdQty.value);
-    if(lid){if(!txProdQty.value||isNaN(lqty)||lqty<=0){txProdQtyError.textContent='Enter quantity > 0.';valid=false;}else{var lp=inventory.find(function(p){return p.id===lid;});if(lp&&lqty>lp.qty){txProdQtyError.textContent='Only '+lp.qty+' in stock.';valid=false;}}}
-    if(!valid)return;
-    var id=editIdInput.value;
-    if(id){
-      var i=transactions.findIndex(function(t){return t.id===id;});
-      if(i!==-1){transactions[i].title=txTitle.value.trim();transactions[i].amount=amt;transactions[i].type=txType.value;transactions[i].note=txNote.value.trim();}
-      exitTxEdit();
-      toast('Transaction Updated', txTitle.value.trim() + ' has been updated.', 'success');
-    } else {
-      var newTx={id:genId(),title:txTitle.value.trim(),amount:amt,type:txType.value,note:txNote.value.trim(),date:new Date().toISOString(),linkedProductId:lid||null,linkedQty:lid?lqty:null};
-      transactions.push(newTx);
-      if(lid){var pi=inventory.findIndex(function(p){return p.id===lid;});if(pi!==-1){inventory[pi].qty-=lqty;if(inventory[pi].qty<0)inventory[pi].qty=0;saveInv();}}
-      txTitle.value='';txAmount.value='';txType.value='income';txNote.value='';txProductSelect.value='';txProdQty.value='';
-      prodLinkInfo.classList.add('empty');prodLinkInfo.innerHTML='';
-      var typeLabel = newTx.type === 'income' ? '💰 Income' : '💸 Expense';
-      toast(typeLabel + ' Added', newTx.title + ' — ' + fmt(newTx.amount), 'success');
+  saveBtn.addEventListener('click', function() {
+  txTitleError.textContent = '';
+  txAmtError.textContent = '';
+  txProdQtyError.textContent = '';
+
+  var valid = true;
+
+  if (!txTitle.value.trim()) {
+    txTitleError.textContent = 'Title required.';
+    valid = false;
+  }
+
+  var amt = parseFloat(txAmount.value);
+  if (!txAmount.value || isNaN(amt) || amt <= 0) {
+    txAmtError.textContent = 'Enter amount > 0.';
+    valid = false;
+  }
+
+  var newLinkedProductId = txProductSelect.value || null;
+  var newLinkedQty = newLinkedProductId ? parseInt(txProdQty.value) : null;
+
+  if (newLinkedProductId) {
+    if (!txProdQty.value || isNaN(newLinkedQty) || newLinkedQty <= 0) {
+      txProdQtyError.textContent = 'Enter quantity > 0.';
+      valid = false;
     }
-    saveTx();refreshAll();
+  }
+
+  if (!valid) return;
+
+  var id = editIdInput.value;
+
+  if (id) {
+    var i = transactions.findIndex(function(t) {
+      return t.id === id;
+    });
+
+    if (i === -1) return;
+
+    var oldTx = transactions[i];
+
+    restoreLinkedStock(oldTx);
+
+    if (newLinkedProductId) {
+      var applied = applyLinkedStock(newLinkedProductId, newLinkedQty);
+      if (!applied) {
+        applyLinkedStock(oldTx.linkedProductId, oldTx.linkedQty);
+        txProdQtyError.textContent = 'Not enough stock for the selected product.';
+        renderInventory();
+        return;
+      }
+    }
+
+    transactions[i].title = txTitle.value.trim();
+    transactions[i].amount = amt;
+    transactions[i].type = txType.value;
+    transactions[i].note = txNote.value.trim();
+    transactions[i].linkedProductId = newLinkedProductId;
+    transactions[i].linkedQty = newLinkedProductId ? newLinkedQty : null;
+
+    saveInv();
+    saveTx();
+    exitTxEdit();
+    refreshAll();
+    toast('Transaction Updated', txTitle.value.trim() + ' has been updated.', 'success');
+  } else {
+    if (newLinkedProductId) {
+      var appliedNew = applyLinkedStock(newLinkedProductId, newLinkedQty);
+      if (!appliedNew) {
+        txProdQtyError.textContent = 'Not enough stock for the selected product.';
+        renderInventory();
+        return;
+      }
+    }
+
+    var newTx = {
+      id: genId(),
+      title: txTitle.value.trim(),
+      amount: amt,
+      type: txType.value,
+      note: txNote.value.trim(),
+      date: new Date().toISOString(),
+      linkedProductId: newLinkedProductId,
+      linkedQty: newLinkedProductId ? newLinkedQty : null
+    };
+
+    transactions.push(newTx);
+
+    txTitle.value = '';
+    txAmount.value = '';
+    txType.value = 'income';
+    txNote.value = '';
+    txProductSelect.value = '';
+    txProdQty.value = '';
+    prodLinkInfo.classList.add('empty');
+    prodLinkInfo.innerHTML = '';
+
+    saveInv();
+    saveTx();
+    refreshAll();
+
+    var typeLabel = newTx.type === 'income' ? '💰 Income' : '💸 Expense';
+    toast(typeLabel + ' Added', newTx.title + ' — ' + fmt(newTx.amount), 'success');
+  }
+});
+
+  function editTx(id) {
+  var tx = transactions.find(function(t) { return t.id === id; });
+  if (!tx) return;
+
+  editIdInput.value = tx.id;
+  txTitle.value = tx.title;
+  txAmount.value = tx.amount;
+  txType.value = tx.type;
+  txNote.value = tx.note || '';
+  txProductSelect.value = tx.linkedProductId || '';
+  txProdQty.value = tx.linkedQty || '';
+
+  formTitle.textContent = 'Edit Transaction';
+  saveBtn.textContent = 'Save Changes';
+  cancelBtn.textContent = 'Cancel Edit';
+
+  updateProdLinkInfo();
+
+  document.querySelector('#section-transactions .form-card').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
   });
 
-  function editTx(id){
-    var tx=transactions.find(function(t){return t.id===id;});if(!tx)return;
-    editIdInput.value=tx.id;txTitle.value=tx.title;txAmount.value=tx.amount;txType.value=tx.type;txNote.value=tx.note||'';
-    formTitle.textContent='Edit Transaction';saveBtn.textContent='Save Changes';cancelBtn.textContent='Cancel Edit';
-    document.querySelector('#section-transactions .form-card').scrollIntoView({behavior:'smooth',block:'start'});
-    toast('Edit Mode', 'Editing "' + tx.title + '"', 'info', 2000);
-  }
+  toast('Edit Mode', 'Editing "' + tx.title + '"', 'info', 2000);
+}
 
-  function exitTxEdit(){
-    editIdInput.value='';formTitle.textContent='Add Transaction';saveBtn.textContent='Add Transaction';cancelBtn.textContent='Clear';
-    txTitle.value='';txAmount.value='';txType.value='income';txNote.value='';txTitleError.textContent='';txAmtError.textContent='';
-  }
+  function exitTxEdit() {
+  editIdInput.value = '';
+  formTitle.textContent = 'Add Transaction';
+  saveBtn.textContent = 'Add Transaction';
+  cancelBtn.textContent = 'Clear';
+  txTitle.value = '';
+  txAmount.value = '';
+  txType.value = 'income';
+  txNote.value = '';
+  txProductSelect.value = '';
+  txProdQty.value = '';
+  prodLinkInfo.classList.add('empty');
+  prodLinkInfo.innerHTML = '';
+  txTitleError.textContent = '';
+  txAmtError.textContent = '';
+  txProdQtyError.textContent = '';
+}
 
   cancelBtn.addEventListener('click',function(){
     if(editIdInput.value){exitTxEdit();}
     else{txTitle.value='';txAmount.value='';txType.value='income';txNote.value='';txProductSelect.value='';txProdQty.value='';prodLinkInfo.classList.add('empty');prodLinkInfo.innerHTML='';txTitleError.textContent='';txAmtError.textContent='';txProdQtyError.textContent='';}
   });
 
-  function deleteTx(id){
-    var tx = transactions.find(function(t){ return t.id===id; });
-    var title = tx ? tx.title : 'Transaction';
-    showConfirm(
-      'Delete Transaction',
-      'Delete "' + title + '"? This cannot be undone.',
-      '🗑️', 'Yes, Delete',
-      function() {
-        transactions = transactions.filter(function(t){ return t.id!==id; });
-        saveTx(); refreshAll();
-        toast('Transaction Deleted', '"' + title + '" has been removed.', 'error', 3000);
+  function deleteTx(id) {
+  var tx = transactions.find(function(t) { return t.id === id; });
+  var title = tx ? tx.title : 'Transaction';
+
+  showConfirm(
+    'Delete Transaction',
+    'Delete "' + title + '"? This cannot be undone.',
+    '🗑️',
+    'Yes, Delete',
+    function() {
+      if (tx && tx.linkedProductId && tx.linkedQty) {
+        restoreLinkedStock(tx);
+        saveInv();
       }
-    );
-  }
+
+      transactions = transactions.filter(function(t) {
+        return t.id !== id;
+      });
+
+      saveTx();
+      refreshAll();
+      toast('Transaction Deleted', '"' + title + '" has been removed.', 'error', 3000);
+    }
+  );
+}
 
   // searchInput listener is now defined inside renderTable block above
-  filterBtns.forEach(function(btn){btn.addEventListener('click',function(){filterBtns.forEach(function(b){b.classList.remove('active');});this.classList.add('active');activeFilter=this.dataset.filter;renderTable();});});
+  searchInput.addEventListener('input', function() {
+  searchQuery = this.value;
+  renderTable();
+});
 
+filterBtns.forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    filterBtns.forEach(function(b) { b.classList.remove('active'); });
+    this.classList.add('active');
+    activeFilter = this.dataset.filter;
+    renderTable();
+  });
+});
   /* ══════════════════════════════════════════════════════════
-     INVENTORY
+        INVENTORY
   ══════════════════════════════════════════════════════════ */
   imgFileInput.addEventListener('change',function(){if(this.files&&this.files[0])readImageFile(this.files[0]);});
   imgUploadArea.addEventListener('dragover',function(e){e.preventDefault();imgUploadArea.classList.add('drag-over');});
@@ -1067,4 +1225,3 @@ document.addEventListener('DOMContentLoaded', function () {
   window.AM={editTx:editTx,deleteTx:deleteTx,editProd:editProd,deleteProd:deleteProd,openSell:openSell};
 
 }); // end DOMContentLoaded
-
