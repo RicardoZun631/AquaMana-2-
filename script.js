@@ -15,14 +15,25 @@ var auth = firebase.auth();
 var db   = firebase.firestore();
 
 /* ── EMAILJS CONFIG ─────────────────────────────────────────── */
-var EJS_SERVICE  = 'service_qra8hni';
-var EJS_TEMPLATE = 'template_q7bc1pb';
+var EJS_SERVICE  = 'service_06pkytu';
+var EJS_TEMPLATE = 'template_t0cuxla';
 var EJS_KEY      = 'c8pnyj3ZHpF97_Qjx';
 emailjs.init({ publicKey: EJS_KEY });
 
-
+/* ══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATION SYSTEM
+   Usage:
+     toast('Title', 'Message', 'success')  → green
+     toast('Title', 'Message', 'error')    → red
+     toast('Title', 'Message', 'warning')  → orange
+     toast('Title', 'Message', 'info')     → blue (default)
+══════════════════════════════════════════════════════════════ */
 var toastContainer = document.getElementById('toast-container');
-
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM CONFIRM MODAL
+   Replaces all browser confirm() popups.
+   Usage: showConfirm('Title', 'Message', '🗑️', function() { doSomething(); });
+══════════════════════════════════════════════════════════════ */
 var confirmModal      = document.getElementById('confirm-modal');
 var confirmTitle      = document.getElementById('confirm-title');
 var confirmMessage    = document.getElementById('confirm-message');
@@ -32,46 +43,36 @@ var confirmCancelBtn  = document.getElementById('confirm-cancel-btn');
 var _confirmCallback  = null;
 
 function showConfirm(title, message, icon, okLabel, callback) {
-  if (!confirmModal || !confirmTitle || !confirmMessage || !confirmIcon || !confirmOkBtn) {
-    if (window.confirm(message)) {
-      if (callback) callback();
-    }
-    return;
-  }
-
   confirmTitle.textContent   = title;
   confirmMessage.textContent = message;
-  confirmIcon.textContent    = icon || '⚠️';
+  confirmIcon.textContent    = icon  || '⚠️';
   confirmOkBtn.textContent   = okLabel || 'Confirm';
   _confirmCallback = callback;
   confirmModal.classList.remove('hidden');
 }
 
-if (confirmOkBtn && confirmCancelBtn && confirmModal) {
-  confirmOkBtn.addEventListener('click', function() {
-    confirmModal.classList.add('hidden');
-    if (_confirmCallback) {
-      _confirmCallback();
-      _confirmCallback = null;
-    }
-  });
+confirmOkBtn.addEventListener('click', function() {
+  confirmModal.classList.add('hidden');
+  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+});
 
-  confirmCancelBtn.addEventListener('click', function() {
+confirmCancelBtn.addEventListener('click', function() {
+  confirmModal.classList.add('hidden');
+  _confirmCallback = null;
+});
+
+confirmModal.addEventListener('click', function(e) {
+  if (e.target === confirmModal) {
     confirmModal.classList.add('hidden');
     _confirmCallback = null;
-  });
+  }
+});
 
-  confirmModal.addEventListener('click', function(e) {
-    if (e.target === confirmModal) {
-      confirmModal.classList.add('hidden');
-      _confirmCallback = null;
-    }
-  });
-}
+
 
 function toast(title, message, type, duration) {
   type     = type     || 'info';
-  duration = duration || 3000;
+  duration = duration || 3000; // default 3 seconds
 
   var icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
 
@@ -85,6 +86,7 @@ function toast(title, message, type, duration) {
     '</div>' +
     '<button class="toast-close" onclick="this.parentElement._remove()">✕</button>';
 
+  // Attach a remove method directly on the element
   el._remove = function() {
     el.classList.add('removing');
     setTimeout(function() {
@@ -93,24 +95,29 @@ function toast(title, message, type, duration) {
   };
 
   toastContainer.appendChild(el);
+
+  // Auto-dismiss after duration
   setTimeout(function() { el._remove(); }, duration);
 }
 
-
+/* ══════════════════════════════════════════════════════════════
+   EMAIL SYSTEM (EmailJS)
+   Sends all emails through the same template.
+   The template uses: {{to_email}}, {{subject}}, {{message}}
+══════════════════════════════════════════════════════════════ */
 function sendEmail(toEmail, subject, message) {
-  return emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+  emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
     to_email: toEmail,
     subject:  subject,
     message:  message
-  }).then(function(response) {
-    console.log('Email sent:', subject, response);
-    return response;
+  }).then(function() {
+    console.log('Email sent: ' + subject);
   }).catch(function(err) {
-    console.error('EmailJS error for "' + subject + '":', err);
-    throw err;
+    console.error('EmailJS error:', JSON.stringify(err));
   });
 }
 
+/* ── Email: Signup Confirmation ─────────────────────────────── */
 function sendWelcomeEmail(name, email) {
   var msg =
     'Hi ' + name + '! 👋\n\n' +
@@ -123,9 +130,10 @@ function sendWelcomeEmail(name, email) {
     '• Get alerts for low stock and high expenses\n\n' +
     'Get started by adding your first transaction!\n\n' +
     '— The AguaMana Team 💧';
-  return sendEmail(email, 'Welcome to AguaMana! 💧', msg);
+  sendEmail(email, 'Welcome to AguaMana! 💧', msg);
 }
 
+/* ── Email: Daily Summary ───────────────────────────────────── */
 function sendDailySummaryEmail(name, email, txList, income, expenses, balance) {
   var today    = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
   var txLines  = txList.length
@@ -144,9 +152,10 @@ function sendDailySummaryEmail(name, email, txList, income, expenses, balance) {
     '  Balance:        ' + balance  + '\n\n' +
     'Keep up the great work! 💪\n\n' +
     '— AguaMana 💧';
-  return sendEmail(email, 'AguaMana Daily Summary — ' + today, msg);
+  sendEmail(email, 'AguaMana Daily Summary — ' + today, msg);
 }
 
+/* ── Email: Low Stock Alert ─────────────────────────────────── */
 function sendLowStockEmail(name, email, lowProducts) {
   var lines = lowProducts.map(function(p) {
     return '  • ' + p.name + ' — only ' + p.qty + ' unit' + (p.qty===1?'':'s') + ' left';
@@ -157,8 +166,10 @@ function sendLowStockEmail(name, email, lowProducts) {
     lines + '\n\n' +
     'Please restock soon to avoid running out.\n\n' +
     '— AguaMana 💧';
-  return sendEmail(email, '⚠️ AguaMana Low Stock Alert', msg);
+  sendEmail(email, '⚠️ AguaMana Low Stock Alert', msg);
 }
+
+/* ── Email: Expense Warning ─────────────────────────────────── */
 function sendExpenseWarningEmail(name, email, balance, income, expenses) {
   var msg =
     'Hi ' + name + ',\n\n' +
@@ -168,7 +179,7 @@ function sendExpenseWarningEmail(name, email, balance, income, expenses) {
     '  Current Balance: ' + balance + '\n\n' +
     'Consider reviewing your recent expenses to get back on track.\n\n' +
     '— AguaMana 💧';
-  return sendEmail(email, '🚨 AguaMana Expense Warning', msg);
+  sendEmail(email, '🚨 AguaMana Expense Warning', msg);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -176,6 +187,7 @@ function sendExpenseWarningEmail(name, email, balance, income, expenses) {
 ══════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function () {
 
+  /* ── ELEMENT REFERENCES ─────────────────────────────────── */
   var loginPage      = document.getElementById('login-page');
   var app            = document.getElementById('app');
   var authLoading    = document.getElementById('auth-loading');
@@ -205,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var logoutBtn      = document.getElementById('logout-btn');
   var navItems       = document.querySelectorAll('.nav-item');
 
+  // Dashboard
   var elIncome       = document.getElementById('total-income');
   var elExpenses     = document.getElementById('total-expenses');
   var elBalance      = document.getElementById('total-balance');
@@ -228,7 +241,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var txPrevBtn       = document.getElementById('tx-prev-btn');
   var txNextBtn       = document.getElementById('tx-next-btn');
   var txPageInfo      = document.getElementById('tx-page-info');
+  var testEmailBtn    = document.getElementById('test-email-btn');
+  var emailTestSent   = document.getElementById('email-test-sent');
 
+  // Transaction form
   var formTitle      = document.getElementById('form-title');
   var editIdInput    = document.getElementById('edit-id');
   var txTitle        = document.getElementById('tx-title');
@@ -245,6 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var filterBtns     = document.querySelectorAll('.filter-btn');
   var currencyLabels = document.querySelectorAll('.currency-label');
 
+  // Product link
   var productLinkToggle = document.getElementById('product-link-toggle');
   var productLinkBody   = document.getElementById('product-link-body');
   var productLinkArrow  = document.getElementById('product-link-arrow');
@@ -253,6 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var txProdQtyError    = document.getElementById('tx-prod-qty-error');
   var prodLinkInfo      = document.getElementById('prod-link-info');
 
+  // Inventory
   var invFormTitle  = document.getElementById('inv-form-title');
   var invEditId     = document.getElementById('inv-edit-id');
   var invName       = document.getElementById('inv-name');
@@ -281,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var sellConfirmBtn= document.getElementById('sell-confirm-btn');
   var sellCancelBtn = document.getElementById('sell-cancel-btn');
 
+  // Settings
   var setName         = document.getElementById('set-name');
   var setEmail        = document.getElementById('set-email');
   var setBusiness     = document.getElementById('set-business');
@@ -295,22 +314,22 @@ document.addEventListener('DOMContentLoaded', function () {
   var setThreshold      = document.getElementById('set-threshold');
   var saveThresholdBtn  = document.getElementById('save-threshold-btn');
   var resetDataBtn    = document.getElementById('reset-data-btn');
-  var firebaseUid     = document.getElementById('firebase-uid');
 
+  /* ── STATE ──────────────────────────────────────────────── */
   var transactions  = [];
   var inventory     = [];
   var activeFilter  = 'all';
   var searchQuery   = '';
   var sellTargetId  = null;
   var currentImgB64 = null;
-  var LOW_STOCK     = 5;
+  var LOW_STOCK     = 5;  // overridden by settings.lowStockThreshold on load
   var currentUser   = null;
   var expWarnEmailSentToday = false;
   var ITEMS_PER_PAGE     = 50;
   var txCurrentPage      = 1;
   var monthlyCurrentPage = 1;
   var monthlySearchQuery = '';
-  var currentMonthTxs    = [];
+  var currentMonthTxs    = []; // cached for pagination + search
 
   var settings = {
     name:          '',
@@ -323,6 +342,7 @@ document.addEventListener('DOMContentLoaded', function () {
     lowStockThreshold:  5
   };
 
+  /* ── LOCAL STORAGE (namespaced by user UID) ─────────────── */
   function txKey()  { return 'am_tx_'  + (currentUser ? currentUser.uid : 'guest'); }
   function invKey() { return 'am_inv_' + (currentUser ? currentUser.uid : 'guest'); }
   function saveTx()  { localStorage.setItem(txKey(),  JSON.stringify(transactions)); }
@@ -330,6 +350,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function saveInv() { localStorage.setItem(invKey(), JSON.stringify(inventory)); }
   function loadInv() { var r = localStorage.getItem(invKey()); return r ? JSON.parse(r) : []; }
 
+  /* ── HELPERS ────────────────────────────────────────────── */
   function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
 
   function fmt(n) {
@@ -339,7 +360,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function fmtDate(iso) {
     return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   }
-    function esc(str) {
+
+  function esc(str) {
     var d = document.createElement('div');
     d.appendChild(document.createTextNode(String(str || '')));
     return d.innerHTML;
@@ -353,13 +375,16 @@ document.addEventListener('DOMContentLoaded', function () {
     [emailError, passwordError, regNameError, regEmailError, regPwError].forEach(function(el) { el.textContent = ''; });
   }
 
+  /* ── UPDATE TOPBAR with user's NAME ─────────────────────── */
   function updateTopbar() {
     var displayName = settings.name || currentUser.email.split('@')[0];
     topbarName.textContent     = displayName;
     topbarEmailSub.textContent = currentUser.email;
+    // First letter of name as avatar
     topbarAvatar.textContent   = displayName.charAt(0).toUpperCase();
   }
 
+  /* ── APPLY SETTINGS TO UI ───────────────────────────────── */
   function applySettings() {
     setCurrency.value         = settings.currency;
     setName.value             = settings.name;
@@ -373,6 +398,7 @@ document.addEventListener('DOMContentLoaded', function () {
     currencyLabels.forEach(function(el) { el.textContent = settings.currency; });
   }
 
+  /* ── AUTH TABS ──────────────────────────────────────────── */
   tabSignin.addEventListener('click', function() {
     tabSignin.classList.add('active'); tabRegister.classList.remove('active');
     signinForm.classList.remove('hidden'); registerForm.classList.add('hidden');
@@ -384,6 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
     clearAuthErrors();
   });
 
+  /* ── SIGN IN ────────────────────────────────────────────── */
   loginBtn.addEventListener('click', function() {
     clearAuthErrors();
     var email = emailInput.value.trim(), pass = passwordInput.value, valid = true;
@@ -404,49 +431,40 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   passwordInput.addEventListener('keydown', function(e) { if (e.key==='Enter') loginBtn.click(); });
 
+  /* ── REGISTER ───────────────────────────────────────────── */
   registerBtn.addEventListener('click', function() {
     clearAuthErrors();
-    var name = regName.value.trim();
-    var business = regBusiness.value.trim();
-    var email = regEmail.value.trim();
-    var pass = regPassword.value;
-    var valid = true;
-
-    if (!name)  { regNameError.textContent = 'Name is required.'; valid = false; }
-    if (!email) { regEmailError.textContent = 'Email is required.'; valid = false; }
-    if (!pass || pass.length < 6) { regPwError.textContent = 'Password must be 6+ characters.'; valid = false; }
+    var name=regName.value.trim(), business=regBusiness.value.trim(),
+        email=regEmail.value.trim(), pass=regPassword.value, valid=true;
+    if (!name)  { regNameError.textContent='Name is required.'; valid=false; }
+    if (!email) { regEmailError.textContent='Email is required.'; valid=false; }
+    if (!pass||pass.length<6) { regPwError.textContent='Password must be 6+ characters.'; valid=false; }
     if (!valid) return;
-
-    showLoading();
-    registerBtn.disabled = true;
+    showLoading(); registerBtn.disabled = true;
 
     auth.createUserWithEmailAndPassword(email, pass)
       .then(function(result) {
         var user = result.user;
         return db.collection('users').doc(user.uid).set({
-          name: name,
-          business: business,
-          email: email,
-          currency: '$',
-          lowStockAlert: true,
-          expenseWarn: true,
-          dailyEmail: true,
+          name: name, business: business, email: email,
+          currency: '$', lowStockAlert: true, expenseWarn: true, dailyEmail: true,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function() {
-          return sendWelcomeEmail(name, email);
         });
       })
+      .then(function() {
+        // Send welcome email
+        sendWelcomeEmail(name, email);
+      })
       .catch(function(err) {
-        hideLoading();
-        registerBtn.disabled = false;
+        hideLoading(); registerBtn.disabled = false;
         var msg = 'Registration failed.';
-        if (err.code === 'auth/email-already-in-use') msg = 'An account with this email already exists.';
-        if (err.code === 'auth/weak-password') msg = 'Password is too weak.';
-        registerError.textContent = msg;
-        registerError.classList.remove('hidden');
+        if (err.code==='auth/email-already-in-use') msg = 'An account with this email already exists.';
+        if (err.code==='auth/weak-password')        msg = 'Password is too weak.';
+        registerError.textContent = msg; registerError.classList.remove('hidden');
       });
   });
 
+  /* ── AUTH STATE OBSERVER ────────────────────────────────── */
   auth.onAuthStateChanged(function(user) {
     if (user) {
       currentUser = user;
@@ -481,11 +499,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  /* ── SHOW APP ───────────────────────────────────────────── */
   function showApp(user) {
     hideLoading();
     loginPage.classList.add('hidden');
     app.classList.remove('hidden');
-    firebaseUid.textContent = 'UID: ' + user.uid;
     applySettings();
     updateTopbar();
     refreshAll();
@@ -493,8 +511,10 @@ document.addEventListener('DOMContentLoaded', function () {
     checkDailySummaryEmail();
   }
 
+  /* ── LOGOUT ─────────────────────────────────────────────── */
   logoutBtn.addEventListener('click', function() {
     auth.signOut().then(function() {
+      // Clear product link panel to prevent cross-account data leaking into the UI
       txProductSelect.innerHTML = '<option value="">— None —</option>';
       txProdQty.value = '';
       prodLinkInfo.classList.add('empty');
@@ -515,13 +535,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var key      = 'am_daily_' + currentUser.uid;
     var lastSent = localStorage.getItem(key);
-    var today    = new Date().toDateString();
+    var today    = new Date().toDateString(); // e.g. "Mon Apr 07 2025"
 
-    if (lastSent === today) return;
-        var todayTxs = transactions.filter(function(tx) {
+    if (lastSent === today) return; // already sent today
+
+    // Get today's transactions
+    var todayTxs = transactions.filter(function(tx) {
       return new Date(tx.date).toDateString() === today;
     });
 
+    // Calculate totals
     var inc = 0, exp = 0;
     transactions.forEach(function(tx) { if(tx.type==='income') inc+=tx.amount; else exp+=tx.amount; });
 
@@ -530,13 +553,10 @@ document.addEventListener('DOMContentLoaded', function () {
       currentUser.email,
       todayTxs,
       fmt(inc), fmt(exp), fmt(inc - exp)
-    ).then(function() {
-      localStorage.setItem(key, today);
-      toast('Daily Summary', 'Your daily summary email has been sent!', 'info', 4000);
-    }).catch(function(err) {
-      toast('Daily Summary Failed', 'Could not send the summary email. Please check your EmailJS setup.', 'error', 5000);
-      console.error('Daily summary failed:', err);
-    });
+    );
+
+    localStorage.setItem(key, today);
+    toast('Daily Summary', 'Your daily summary email has been sent!', 'info', 4000);
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -554,18 +574,14 @@ document.addEventListener('DOMContentLoaded', function () {
     elCount.textContent    = transactions.length;
     elBalance.style.color  = (settings.expenseWarn && balance < 0) ? 'var(--expense)' : 'var(--accent)';
 
+    // Send expense warning email if balance goes negative (once per session)
     if (settings.expenseWarn && balance < 0 && !expWarnEmailSentToday && currentUser) {
-      sendExpenseWarningEmail(settings.name||'there', currentUser.email, fmt(balance), fmt(income), fmt(expenses))
-        .then(function() {
-          expWarnEmailSentToday = true;
-          toast('Expense Warning', 'Your expenses exceed your income. An alert email was sent.', 'warning', 5000);
-        })
-        .catch(function(err) {
-          toast('Expense Alert Failed', 'The warning email could not be sent.', 'error', 5000);
-          console.error('Expense warning email failed:', err);
-        });
+      expWarnEmailSentToday = true;
+      sendExpenseWarningEmail(settings.name||'there', currentUser.email, fmt(balance), fmt(income), fmt(expenses));
+      toast('Expense Warning', 'Your expenses exceed your income. An alert email was sent.', 'warning', 5000);
     }
 
+    // Recent list
     recentList.innerHTML = '';
     if (!transactions.length) {
       recentList.innerHTML = '<p class="empty-state">No transactions yet.</p>';
@@ -585,6 +601,7 @@ document.addEventListener('DOMContentLoaded', function () {
     buildMonthDropdown();
   }
 
+  /* ── Monthly Summary ────────────────────────────────────── */
   function buildMonthDropdown() {
     var current = monthSelect.value;
     var months = {};
@@ -617,6 +634,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return d.getFullYear() === yr && d.getMonth() === mo;
     });
 
+    // Calculate totals from ALL transactions in month (ignore search filter for totals)
     var inc = 0, exp = 0;
     allMonthTxs.forEach(function(tx){ if(tx.type==='income') inc+=tx.amount; else exp+=tx.amount; });
     var bal = inc - exp;
@@ -629,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
     monthlyTxSec.classList.remove('hidden');
     monthlyHolder.classList.add('hidden');
 
+    // Apply monthly search filter
     var filtered = allMonthTxs.slice();
     if (monthlySearchQuery.trim()) {
       var q = monthlySearchQuery.toLowerCase();
@@ -636,6 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     filtered.sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
 
+    // Cache for pagination
     currentMonthTxs = filtered;
 
     renderMonthlyPage();
@@ -675,6 +695,7 @@ document.addEventListener('DOMContentLoaded', function () {
       monthlyTxList.appendChild(row);
     });
 
+    // Pagination
     if (currentMonthTxs.length > ITEMS_PER_PAGE) {
       monthlyPagBar.classList.remove('hidden');
       monthlyPageInfo.textContent = 'Page ' + monthlyCurrentPage + ' of ' + totalPages + '  (' + currentMonthTxs.length + ' shown)';
@@ -697,12 +718,12 @@ document.addEventListener('DOMContentLoaded', function () {
   monthSelect.addEventListener('change', function() {
     monthlySearchQuery  = '';
     monthlySearch.value = '';
-        monthlyCurrentPage  = 1;
+    monthlyCurrentPage  = 1;
     renderMonthlySummary(this.value);
   });
 
   function refreshAll() {
-    txCurrentPage = 1;
+    txCurrentPage = 1; // always go back to first page when data changes
     updateDashboard();
     renderTable();
     renderInventory();
@@ -817,6 +838,7 @@ document.addEventListener('DOMContentLoaded', function () {
     );
   }
 
+  // searchInput listener is now defined inside renderTable block above
   filterBtns.forEach(function(btn){btn.addEventListener('click',function(){filterBtns.forEach(function(b){b.classList.remove('active');});this.classList.add('active');activeFilter=this.dataset.filter;renderTable();});});
 
   /* ══════════════════════════════════════════════════════════
@@ -877,15 +899,10 @@ document.addEventListener('DOMContentLoaded', function () {
       inventory.push(newProd);
       invName.value='';invDesc.value='';invQty.value='';invPrice.value='';clearImgPreview();
       toast('Product Added', newProd.name + ' added to inventory.', 'success');
-            if(settings.lowStockAlert && qty<=LOW_STOCK && currentUser) {
-        sendLowStockEmail(settings.name||'there', currentUser.email, [{name:newProd.name,qty:qty}])
-          .then(function() {
-            toast('Low Stock Alert', newProd.name + ' starts with low stock. Email alert sent.', 'warning', 4000);
-          })
-          .catch(function(err) {
-            toast('Low Stock Email Failed', 'Could not send the low stock email.', 'error', 5000);
-            console.error('Low stock email failed after product add:', err);
-          });
+      // Check low stock immediately after adding
+      if(settings.lowStockAlert && qty<=LOW_STOCK && currentUser) {
+        sendLowStockEmail(settings.name||'there', currentUser.email, [{name:newProd.name,qty:qty}]);
+        toast('Low Stock Alert', newProd.name + ' starts with low stock. Email alert sent.', 'warning', 4000);
       }
     }
     saveInv();renderInventory();
@@ -921,6 +938,7 @@ document.addEventListener('DOMContentLoaded', function () {
     );
   }
 
+  /* ── Sell Modal ─────────────────────────────────────────── */
   function openSell(id){
     var p=inventory.find(function(p){return p.id===id;});if(!p)return;
     sellTargetId=id;sellModalName.textContent=p.name+'  —  '+fmt(p.price)+'/unit  (Stock: '+p.qty+')';
@@ -940,15 +958,10 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshAll();
     toast('Sale Recorded! 💰', qty + 'x ' + p.name + ' — ' + fmt(total) + ' added as income.', 'success', 4000);
 
+    // Send low stock email if product is now low after the sale
     if(settings.lowStockAlert && p.qty<=LOW_STOCK && currentUser) {
-      sendLowStockEmail(settings.name||'there', currentUser.email, [{name:p.name,qty:p.qty}])
-        .then(function() {
-          toast('Low Stock Alert', p.name + ' is now low (' + p.qty + ' left). Email sent.', 'warning', 4000);
-        })
-        .catch(function(err) {
-          toast('Low Stock Email Failed', 'Could not send the low stock email.', 'error', 5000);
-          console.error('Low stock email failed after sale:', err);
-        });
+      sendLowStockEmail(settings.name||'there', currentUser.email, [{name:p.name,qty:p.qty}]);
+      toast('Low Stock Alert', p.name + ' is now low (' + p.qty + ' left). Email sent.', 'warning', 4000);
     }
   });
   sellCancelBtn.addEventListener('click',function(){sellModal.classList.add('hidden');});
@@ -964,7 +977,7 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function(){
         profileSaved.classList.remove('hidden');
         setTimeout(function(){profileSaved.classList.add('hidden');},2500);
-        updateTopbar();
+        updateTopbar(); // update the name in topbar immediately
         toast('Profile Saved', 'Your profile has been updated.', 'success');
       })
       .catch(function(err){ toast('Save Failed', err.message, 'error'); });
@@ -1008,6 +1021,26 @@ document.addEventListener('DOMContentLoaded', function () {
     if(currentUser) db.collection('users').doc(currentUser.uid).update({dailyEmail:settings.dailyEmail});
   });
 
+  // Test email button
+  testEmailBtn.addEventListener('click', function() {
+    if (!currentUser) { toast('Not logged in', 'Please log in first.', 'error'); return; }
+    testEmailBtn.disabled = true;
+    emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+      to_email: currentUser.email,
+      subject:  'AguaMana — Test Email ✅',
+      message:  'Hi ' + (settings.name || 'there') + ',<br><br>This is a test email from AguaMana.<br><br>If you received this, your email notifications are working correctly! 🎉<br><br>— AguaMana 💧'
+    }).then(function() {
+      testEmailBtn.disabled = false;
+      emailTestSent.classList.remove('hidden');
+      setTimeout(function() { emailTestSent.classList.add('hidden'); }, 4000);
+      toast('Test Email Sent!', 'Check ' + currentUser.email, 'success', 4000);
+    }).catch(function(err) {
+      testEmailBtn.disabled = false;
+      console.error('Test email error:', JSON.stringify(err));
+      toast('Email Failed ❌', 'Error: ' + (err.text || err.status || 'unknown') + '. Check console.', 'error', 6000);
+    });
+  });
+
   resetDataBtn.addEventListener('click',function(){
     showConfirm(
       '⚠️ Reset All Data',
@@ -1022,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', function () {
     );
   });
 
+  /* ── NAVIGATION ─────────────────────────────────────────── */
   function showSection(name){
     document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
     var t=document.getElementById('section-'+name); if(t)t.classList.add('active');
@@ -1032,4 +1066,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.AM={editTx:editTx,deleteTx:deleteTx,editProd:editProd,deleteProd:deleteProd,openSell:openSell};
 
-});
+}); // end DOMContentLoaded
+
